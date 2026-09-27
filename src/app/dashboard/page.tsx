@@ -6,6 +6,7 @@ import {
   Martini,
   PackagePlus,
 } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { logout } from "@/app/dashboard/actions";
@@ -34,9 +35,9 @@ export default async function DashboardPage() {
   if (!organization) throw new Error("Organization not found.");
   const location = locations?.[0];
   const navigation = [
-    { name: "Overview", icon: Boxes, active: true },
-    { name: "Service", icon: Martini },
-    { name: "Inventory", icon: PackagePlus },
+    { name: "Overview", icon: Boxes, active: true, href: "/dashboard" },
+    { name: "Service", icon: Martini, href: "#" },
+    { name: "Inventory", icon: PackagePlus, href: "/inventory" },
   ];
 
   return (
@@ -67,11 +68,11 @@ export default async function DashboardPage() {
 
       <div className="mx-auto grid max-w-7xl gap-8 px-6 py-8 lg:grid-cols-[210px_1fr]">
         <nav className="space-y-1">
-          {navigation.map(({ name, icon: Icon, active }) => (
-            <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${active ? "bg-stone-950 text-white" : "text-stone-500"}`} key={name}>
+          {navigation.map(({ name, icon: Icon, active, href }) => (
+            <Link className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${active ? "bg-stone-950 text-white" : "text-stone-500 hover:bg-white hover:text-stone-900"}`} href={href} key={name}>
               <Icon size={18} />
               {name}
-            </div>
+            </Link>
           ))}
         </nav>
 
@@ -107,13 +108,13 @@ export default async function DashboardPage() {
                 <p className="text-sm text-stone-500">Add generic ingredients first, then connect exact brands.</p>
               </div>
             </div>
-            <button className="flex w-full items-center justify-between px-6 py-5 text-left hover:bg-stone-50">
+            <Link className="flex w-full items-center justify-between px-6 py-5 text-left hover:bg-stone-50" href="/inventory">
               <span>
                 <span className="block text-sm font-semibold">Create Vodka</span>
                 <span className="mt-1 block text-sm text-stone-500">Then add Smirnoff, Grey Goose, Tito&apos;s, or other stocked brands.</span>
               </span>
               <ChevronRight className="text-stone-400" size={20} />
-            </button>
+            </Link>
           </article>
         </section>
       </div>

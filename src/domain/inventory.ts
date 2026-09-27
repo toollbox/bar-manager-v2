@@ -8,6 +8,12 @@ export const ingredientSchema = z.object({
   baseUnit: z.enum(baseUnits),
 });
 
+export const createIngredientSchema = z.object({
+  name: z.string().trim().min(2, "Enter an ingredient name.").max(120),
+  category: z.string().trim().min(2, "Enter a category.").max(80),
+  baseUnit: z.enum(baseUnits),
+});
+
 export const inventoryProductSchema = z.object({
   ingredientId: z.uuid(),
   brand: z.string().trim().min(1).max(120),
@@ -18,6 +24,32 @@ export const inventoryProductSchema = z.object({
   sku: z.string().trim().max(80).optional(),
   defaultCost: z.number().nonnegative().optional(),
 });
+
+const optionalNumber = z.preprocess(
+  (value) => (value === "" || value === null ? undefined : value),
+  z.coerce.number().nonnegative().optional(),
+);
+
+export const createInventoryProductSchema = z
+  .object({
+    ingredientId: z.uuid(),
+    locationId: z.uuid(),
+    brand: z.string().trim().min(1, "Enter a brand.").max(120),
+    name: z.string().trim().min(1, "Enter a product name.").max(160),
+    variant: z.preprocess(
+      (value) => (value === "" || value === null ? undefined : value),
+      z.string().trim().max(120).optional(),
+    ),
+    bottleSize: optionalNumber.pipe(z.number().positive().optional()),
+    defaultCost: optionalNumber,
+    openingQuantity: z.coerce.number().nonnegative(),
+    reorderPoint: z.coerce.number().nonnegative(),
+    targetStock: z.coerce.number().nonnegative(),
+  })
+  .refine((value) => value.targetStock >= value.reorderPoint, {
+    message: "Target stock must be at least the reorder point.",
+    path: ["targetStock"],
+  });
 
 export const recipeSelectionPolicies = [
   "any_product",

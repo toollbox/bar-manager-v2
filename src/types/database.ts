@@ -235,7 +235,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "create_organization":
+            "create_inventory_product":
+{ Args: { "opening_quantity"?: number,"product_bottle_size"?: number,"product_brand": string,"product_default_cost"?: number,"product_name": string,"product_reorder_point"?: number,"product_target_stock"?: number,"product_variant"?: string,"target_ingredient_id": string,"target_location_id": string,"target_organization_id": string }; Returns: string
+                           },
+"create_organization":
 { Args: { "first_location_name": string,"location_timezone"?: string,"organization_name": string }; Returns: string
                            },
 "has_organization_role":
