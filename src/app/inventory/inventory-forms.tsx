@@ -1,11 +1,12 @@
 "use client";
 
-import { Plus, Tag } from "lucide-react";
-import { useActionState } from "react";
+import { ArrowDownToLine, Plus, Tag } from "lucide-react";
+import { useActionState, useState } from "react";
 
 import {
   createIngredient,
   createInventoryProduct,
+  recordStockMovement,
   type InventoryFormState,
 } from "@/app/inventory/actions";
 
@@ -34,6 +35,13 @@ function Message({ state }: { state: InventoryFormState }) {
   );
 }
 
+type StockProduct = {
+  id: string;
+  label: string;
+  unit: "ml" | "g" | "each";
+  quantity: number;
+};
+
 export function IngredientForm() {
   const [state, action, pending] = useActionState(createIngredient, initialState);
 
@@ -56,6 +64,10 @@ export function IngredientForm() {
           <option value="g">Grams (g)</option>
           <option value="each">Each</option>
         </select>
+      </label>
+      <label className="block text-sm font-medium text-stone-700">
+        Default image URL <span className="font-normal text-stone-400">(optional)</span>
+        <input className={inputClass} name="imageUrl" placeholder="https://…" type="url" />
       </label>
       {state.errors ? (
         <p className="text-sm text-rose-600">Check the ingredient details.</p>
@@ -104,6 +116,10 @@ export function ProductForm({
           <input className={inputClass} name="name" placeholder="No. 21 Vodka" required />
         </label>
       </div>
+      <label className="block text-sm font-medium text-stone-700">
+        Product image URL <span className="font-normal text-stone-400">(optional)</span>
+        <input className={inputClass} name="imageUrl" placeholder="https://…" type="url" />
+      </label>
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="text-sm font-medium text-stone-700">
           Bottle size
@@ -137,6 +153,89 @@ export function ProductForm({
       <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-stone-950 hover:bg-amber-400 disabled:opacity-60" disabled={pending || ingredients.length === 0}>
         <Tag size={17} /> {pending ? "Adding…" : "Add branded product"}
       </button>
+    </form>
+  );
+}
+
+export function StockMovementForm({
+  products,
+  locationId,
+}: {
+  products: StockProduct[];
+  locationId: string;
+}) {
+  const [state, action, pending] = useActionState(
+    recordStockMovement,
+    initialState,
+  );
+  const [movementType, setMovementType] = useState("purchase");
+  const [productId, setProductId] = useState(products[0]?.id ?? "");
+  const selectedProduct = products.find((product) => product.id === productId);
+
+  return (
+    <form action={action} className="grid gap-4 lg:grid-cols-[1.3fr_1fr_0.7fr_1.4fr_auto] lg:items-end">
+      <input name="locationId" type="hidden" value={locationId} />
+      <label className="text-sm font-medium text-stone-700">
+        Product
+        <select
+          className={inputClass}
+          name="productId"
+          onChange={(event) => setProductId(event.target.value)}
+          required
+          value={productId}
+        >
+          {products.map((product) => (
+            <option key={product.id} value={product.id}>
+              {product.label} · {product.quantity.toLocaleString()} {product.unit}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-sm font-medium text-stone-700">
+        Operation
+        <select
+          className={inputClass}
+          name="movementType"
+          onChange={(event) => setMovementType(event.target.value)}
+          value={movementType}
+        >
+          <option value="purchase">Receive stock</option>
+          <option value="waste">Record waste</option>
+          <option value="spill">Record spill</option>
+          <option value="correction">Correction</option>
+        </select>
+      </label>
+      {movementType === "correction" ? (
+        <label className="text-sm font-medium text-stone-700">
+          Direction
+          <select className={inputClass} name="correctionDirection">
+            <option value="add">Add</option>
+            <option value="remove">Remove</option>
+          </select>
+        </label>
+      ) : (
+        <input name="correctionDirection" type="hidden" value="add" />
+      )}
+      <label className="text-sm font-medium text-stone-700">
+        Quantity {selectedProduct ? `(${selectedProduct.unit})` : ""}
+        <input className={inputClass} min="0.001" name="quantity" placeholder="750" required step="0.001" type="number" />
+      </label>
+      <label className="text-sm font-medium text-stone-700">
+        Note
+        <input className={inputClass} maxLength={1000} name="notes" placeholder="Delivery, reason…" />
+      </label>
+      <button
+        className="flex h-[42px] items-center justify-center gap-2 rounded-xl bg-stone-950 px-5 text-sm font-semibold text-white hover:bg-stone-800 disabled:opacity-60"
+        disabled={pending || products.length === 0}
+      >
+        <ArrowDownToLine size={17} /> {pending ? "Saving…" : "Record"}
+      </button>
+      <div className="lg:col-span-5">
+        {state.errors ? (
+          <p className="text-sm text-rose-600">Select a product and enter a positive quantity.</p>
+        ) : null}
+        <Message state={state} />
+      </div>
     </form>
   );
 }

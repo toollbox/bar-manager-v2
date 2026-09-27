@@ -36,7 +36,8 @@ export default async function DashboardPage() {
   const location = locations?.[0];
   const navigation = [
     { name: "Overview", icon: Boxes, active: true, href: "/dashboard" },
-    { name: "Service", icon: Martini, href: "#" },
+    { name: "Service", icon: Martini, href: "/service" },
+    { name: "Cocktails", icon: GlassWater, href: "/cocktails" },
     { name: "Inventory", icon: PackagePlus, href: "/inventory" },
   ];
 

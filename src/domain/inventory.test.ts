@@ -1,11 +1,39 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  createIngredientSchema,
   createInventoryProductSchema,
   recipeItemSchema,
+  stockMovementSchema,
 } from "@/domain/inventory";
 
 const ingredientId = "7b55c4a1-b7f2-40a3-b5c1-342f724fa8e4";
+
+describe("catalog image URLs", () => {
+  const ingredient = {
+    name: "Vodka",
+    category: "Spirit",
+    baseUnit: "ml",
+  };
+
+  it("accepts an HTTPS image URL", () => {
+    const result = createIngredientSchema.safeParse({
+      ...ingredient,
+      imageUrl: "https://images.example.com/vodka.webp",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an insecure image URL", () => {
+    const result = createIngredientSchema.safeParse({
+      ...ingredient,
+      imageUrl: "http://images.example.com/vodka.webp",
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
 
 describe("recipeItemSchema", () => {
   it("allows a recipe to use any brand for a generic ingredient", () => {
@@ -23,6 +51,33 @@ describe("recipeItemSchema", () => {
       ingredientId,
       selectionPolicy: "require_product",
       quantityInBaseUnit: 50,
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("stockMovementSchema", () => {
+  it("accepts positive user-entered quantities", () => {
+    const result = stockMovementSchema.safeParse({
+      productId: "a06db372-9bc3-41bd-9c15-dfbb36b9e943",
+      locationId: "b2cb66a1-4ddd-4baa-931a-f9368c51c80c",
+      movementType: "waste",
+      correctionDirection: "add",
+      quantity: "25",
+      notes: "Citrus spoiled",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects zero-quantity movements", () => {
+    const result = stockMovementSchema.safeParse({
+      productId: "a06db372-9bc3-41bd-9c15-dfbb36b9e943",
+      locationId: "b2cb66a1-4ddd-4baa-931a-f9368c51c80c",
+      movementType: "purchase",
+      correctionDirection: "add",
+      quantity: "0",
     });
 
     expect(result.success).toBe(false);

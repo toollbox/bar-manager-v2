@@ -1,3 +1,4 @@
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
@@ -22,15 +23,71 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "ingredients": {
+            "cocktail_ingredients": {
                   Row: {
-                    "base_unit": Database["public"]['Enums']["base_unit"],"category": string,"created_at": string,"id": string,"is_active": boolean,"name": string,"organization_id": string,"updated_at": string
+                    "cocktail_id": string,"created_at": string,"id": string,"ingredient_id": string,"notes": string | null,"organization_id": string,"preferred_product_id": string | null,"quantity_in_base_unit": number,"selection_policy": Database["public"]['Enums']["recipe_selection_policy"]
                   }
                   Insert: {
-                    "base_unit": Database["public"]['Enums']["base_unit"],"category": string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"name": string,"organization_id": string,"updated_at"?: string
+                    "cocktail_id": string,"created_at"?: string,"id"?: string,"ingredient_id": string,"notes"?: string | null,"organization_id": string,"preferred_product_id"?: string | null,"quantity_in_base_unit": number,"selection_policy"?: Database["public"]['Enums']["recipe_selection_policy"]
                   }
                   Update: {
-                    "base_unit"?: Database["public"]['Enums']["base_unit"],"category"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"updated_at"?: string
+                    "cocktail_id"?: string,"created_at"?: string,"id"?: string,"ingredient_id"?: string,"notes"?: string | null,"organization_id"?: string,"preferred_product_id"?: string | null,"quantity_in_base_unit"?: number,"selection_policy"?: Database["public"]['Enums']["recipe_selection_policy"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cocktail_ingredients_organization_id_cocktail_id_fkey"
+      columns: ["organization_id","cocktail_id"]
+isOneToOne: false
+      referencedRelation: "cocktails"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "cocktail_ingredients_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cocktail_ingredients_organization_id_ingredient_id_fkey"
+      columns: ["organization_id","ingredient_id"]
+isOneToOne: false
+      referencedRelation: "ingredients"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "cocktail_ingredients_organization_id_ingredient_id_preferr_fkey"
+      columns: ["organization_id","ingredient_id","preferred_product_id"]
+isOneToOne: false
+      referencedRelation: "inventory_products"
+      referencedColumns: ["organization_id","ingredient_id","id"]
+    }
+                  ]
+                },"cocktails": {
+                  Row: {
+                    "created_at": string,"description": string | null,"garnish": string | null,"glassware": string | null,"id": string,"image_path": string | null,"image_url": string | null,"instructions": string,"is_active": boolean,"name": string,"organization_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"description"?: string | null,"garnish"?: string | null,"glassware"?: string | null,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"instructions": string,"is_active"?: boolean,"name": string,"organization_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"description"?: string | null,"garnish"?: string | null,"glassware"?: string | null,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"instructions"?: string,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cocktails_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ingredients": {
+                  Row: {
+                    "base_unit": Database["public"]['Enums']["base_unit"],"category": string,"created_at": string,"id": string,"image_path": string | null,"image_url": string | null,"is_active": boolean,"name": string,"organization_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "base_unit": Database["public"]['Enums']["base_unit"],"category": string,"created_at"?: string,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"is_active"?: boolean,"name": string,"organization_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "base_unit"?: Database["public"]['Enums']["base_unit"],"category"?: string,"created_at"?: string,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -99,13 +156,13 @@ isOneToOne: false
                   ]
                 },"inventory_products": {
                   Row: {
-                    "barcode": string | null,"bottle_size": number | null,"brand": string,"created_at": string,"default_cost": number | null,"id": string,"ingredient_id": string,"is_active": boolean,"name": string,"organization_id": string,"sku": string | null,"updated_at": string,"variant": string | null
+                    "barcode": string | null,"bottle_size": number | null,"brand": string,"created_at": string,"default_cost": number | null,"id": string,"image_path": string | null,"image_url": string | null,"ingredient_id": string,"is_active": boolean,"name": string,"organization_id": string,"sku": string | null,"updated_at": string,"variant": string | null
                   }
                   Insert: {
-                    "barcode"?: string | null,"bottle_size"?: number | null,"brand": string,"created_at"?: string,"default_cost"?: number | null,"id"?: string,"ingredient_id": string,"is_active"?: boolean,"name": string,"organization_id": string,"sku"?: string | null,"updated_at"?: string,"variant"?: string | null
+                    "barcode"?: string | null,"bottle_size"?: number | null,"brand": string,"created_at"?: string,"default_cost"?: number | null,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"ingredient_id": string,"is_active"?: boolean,"name": string,"organization_id": string,"sku"?: string | null,"updated_at"?: string,"variant"?: string | null
                   }
                   Update: {
-                    "barcode"?: string | null,"bottle_size"?: number | null,"brand"?: string,"created_at"?: string,"default_cost"?: number | null,"id"?: string,"ingredient_id"?: string,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"sku"?: string | null,"updated_at"?: string,"variant"?: string | null
+                    "barcode"?: string | null,"bottle_size"?: number | null,"brand"?: string,"created_at"?: string,"default_cost"?: number | null,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"ingredient_id"?: string,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"sku"?: string | null,"updated_at"?: string,"variant"?: string | null
                   }
                   Relationships: [
                     {
@@ -246,10 +303,13 @@ isOneToOne: false
                            },
 "is_organization_member":
 { Args: { "target_organization_id": string }; Returns: boolean
+                           },
+"record_stock_movement":
+{ Args: { "movement_notes"?: string,"stock_movement_type": Database["public"]['Enums']["inventory_movement_type"],"stock_quantity_delta": number,"target_inventory_product_id": string,"target_location_id": string,"target_organization_id": string }; Returns: number
                            }
           }
           Enums: {
-            "app_role": "owner"|"manager"|"bartender","base_unit": "ml"|"g"|"each","inventory_movement_type": "opening_balance"|"purchase"|"drink_production"|"waste"|"spill"|"correction"|"transfer_in"|"transfer_out"
+            "app_role": "owner"|"manager"|"bartender","base_unit": "ml"|"g"|"each","inventory_movement_type": "opening_balance"|"purchase"|"drink_production"|"waste"|"spill"|"correction"|"transfer_in"|"transfer_out","recipe_selection_policy": "any_product"|"prefer_product"|"require_product"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -369,7 +429,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "app_role": ["owner", "manager", "bartender"],"base_unit": ["ml", "g", "each"],"inventory_movement_type": ["opening_balance", "purchase", "drink_production", "waste", "spill", "correction", "transfer_in", "transfer_out"]
+            "app_role": ["owner", "manager", "bartender"],"base_unit": ["ml", "g", "each"],"inventory_movement_type": ["opening_balance", "purchase", "drink_production", "waste", "spill", "correction", "transfer_in", "transfer_out"],"recipe_selection_policy": ["any_product", "prefer_product", "require_product"]
           }
         }
 } as const

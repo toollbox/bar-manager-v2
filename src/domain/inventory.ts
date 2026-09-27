@@ -12,6 +12,10 @@ export const createIngredientSchema = z.object({
   name: z.string().trim().min(2, "Enter an ingredient name.").max(120),
   category: z.string().trim().min(2, "Enter a category.").max(80),
   baseUnit: z.enum(baseUnits),
+  imageUrl: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.url("Enter a valid HTTPS image URL.").startsWith("https://").optional(),
+  ),
 });
 
 export const inventoryProductSchema = z.object({
@@ -45,11 +49,34 @@ export const createInventoryProductSchema = z
     openingQuantity: z.coerce.number().nonnegative(),
     reorderPoint: z.coerce.number().nonnegative(),
     targetStock: z.coerce.number().nonnegative(),
+    imageUrl: z.preprocess(
+      (value) => (value === "" || value === null ? undefined : value),
+      z.url("Enter a valid HTTPS image URL.").startsWith("https://").optional(),
+    ),
   })
   .refine((value) => value.targetStock >= value.reorderPoint, {
     message: "Target stock must be at least the reorder point.",
     path: ["targetStock"],
   });
+
+export const manualMovementTypes = [
+  "purchase",
+  "waste",
+  "spill",
+  "correction",
+] as const;
+
+export const stockMovementSchema = z.object({
+  productId: z.uuid(),
+  locationId: z.uuid(),
+  movementType: z.enum(manualMovementTypes),
+  correctionDirection: z.enum(["add", "remove"]).default("add"),
+  quantity: z.coerce.number().positive("Enter a quantity greater than zero."),
+  notes: z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.string().trim().max(1000).optional(),
+  ),
+});
 
 export const recipeSelectionPolicies = [
   "any_product",

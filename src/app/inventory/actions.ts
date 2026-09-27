@@ -6,6 +6,7 @@ import { getMembership, requireUser } from "@/data/auth";
 import {
   createIngredientSchema,
   createInventoryProductSchema,
+  stockMovementSchema,
 } from "@/domain/inventory";
 
 export type InventoryFormState = {
@@ -33,6 +34,7 @@ export async function createIngredient(
     name: formData.get("name"),
     category: formData.get("category"),
     baseUnit: formData.get("baseUnit"),
+    imageUrl: formData.get("imageUrl"),
   });
 
   if (!result.success) {
@@ -45,6 +47,7 @@ export async function createIngredient(
     name: result.data.name,
     category: result.data.category,
     base_unit: result.data.baseUnit,
+    image_url: result.data.imageUrl,
   });
 
   if (error) {
@@ -76,6 +79,7 @@ export async function createInventoryProduct(
     openingQuantity: formData.get("openingQuantity"),
     reorderPoint: formData.get("reorderPoint"),
     targetStock: formData.get("targetStock"),
+    imageUrl: formData.get("imageUrl"),
   });
 
   if (!result.success) {
@@ -83,7 +87,7 @@ export async function createInventoryProduct(
   }
 
   const { supabase, membership } = await requireInventoryManager();
-  const { error } = await supabase.rpc("create_inventory_product", {
+  const { data: productId, error } = await supabase.rpc("create_inventory_product", {
     target_organization_id: membership.organization_id,
     target_location_id: result.data.locationId,
     target_ingredient_id: result.data.ingredientId,
@@ -101,10 +105,110 @@ export async function createInventoryProduct(
     return { status: "error", message: "Could not add this branded product." };
   }
 
+  if (result.data.imageUrl) {
+    const { error: imageError } = await supabase
+      .from("inventory_products")
+      .update({ image_url: result.data.imageUrl })
+      .eq("id", productId)
+      .eq("organization_id", membership.organization_id);
+
+    if (imageError) {
+      return {
+        status: "error",
+        message: "Product was added, but its image URL could not be saved.",
+      };
+    }
+  }
+
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
   return {
     status: "success",
     message: `${result.data.brand} ${result.data.name} was added.`,
+  };
+}
+
+export async function updateCatalogImage(
+  entityType: "ingredients" | "products" | "cocktails",
+  entityId: string,
+  imagePath: string,
+) {
+  const { supabase, membership } = await requireInventoryManager();
+  const expectedPrefix = `${membership.organization_id}/${entityType}/${entityId}/`;
+
+  if (!imagePath.startsWith(expectedPrefix)) {
+    return { error: "Invalid image path." };
+  }
+
+  const table = entityType === "ingredients"
+    ? "ingredients"
+    : entityType === "products"
+      ? "inventory_products"
+      : "cocktails";
+  const { error } = await supabase
+    .from(table)
+    .update({ image_path: imagePath })
+    .eq("id", entityId)
+    .eq("organization_id", membership.organization_id);
+
+  if (error) return { error: "Could not attach the uploaded image." };
+
+  revalidatePath(entityType === "cocktails" ? "/cocktails" : "/inventory");
+  return { error: null };
+}
+
+export async function recordStockMovement(
+  _state: InventoryFormState,
+  formData: FormData,
+): Promise<InventoryFormState> {
+  const result = stockMovementSchema.safeParse({
+    productId: formData.get("productId"),
+    locationId: formData.get("locationId"),
+    movementType: formData.get("movementType"),
+    correctionDirection: formData.get("correctionDirection"),
+    quantity: formData.get("quantity"),
+    notes: formData.get("notes"),
+  });
+
+  if (!result.success) {
+    return { status: "error", errors: result.error.flatten().fieldErrors };
+  }
+
+  const { supabase, membership } = await requireInventoryManager();
+  const shouldSubtract =
+    result.data.movementType === "waste" ||
+    result.data.movementType === "spill" ||
+    (result.data.movementType === "correction" &&
+      result.data.correctionDirection === "remove");
+  const quantityDelta = shouldSubtract
+    ? -result.data.quantity
+    : result.data.quantity;
+
+  const { data: balance, error } = await supabase.rpc(
+    "record_stock_movement",
+    {
+      target_organization_id: membership.organization_id,
+      target_location_id: result.data.locationId,
+      target_inventory_product_id: result.data.productId,
+      stock_movement_type: result.data.movementType,
+      stock_quantity_delta: quantityDelta,
+      movement_notes: result.data.notes,
+    },
+  );
+
+  if (error) {
+    return {
+      status: "error",
+      message: error.message.includes("Insufficient inventory")
+        ? "This movement would make inventory negative."
+        : "Could not record the stock movement.",
+    };
+  }
+
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
+  return {
+    status: "success",
+    message: `Movement recorded. New balance: ${Number(balance).toLocaleString()}.`,
   };
 }
