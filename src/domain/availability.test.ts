@@ -2,17 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import { calculateCocktailAvailability } from "@/domain/availability";
 
-const vodka = { ingredientId: "vodka", ingredientName: "Vodka", unit: "ml" as const, required: 50 };
+const vodka = { lineId: "vodka-line", ingredientId: "vodka", ingredientName: "Vodka", unit: "ml" as const, required: 50 };
 const stock = [
   { id: "smirnoff", ingredientId: "vodka", label: "Smirnoff No. 21", quantity: 40, isAvailable: true },
   { id: "grey-goose", ingredientId: "vodka", label: "Grey Goose Original", quantity: 110, isAvailable: true },
 ];
 
 describe("calculateCocktailAvailability", () => {
-  it("combines substitute brands and calculates servings", () => {
+  it("offers substitute brands and uses the best-stocked bottle", () => {
     const result = calculateCocktailAvailability([{ ...vodka, selectionPolicy: "any_product", preferredProductId: null }], stock);
     expect(result.canMake).toBe(true);
-    expect(result.maxServings).toBe(3);
+    expect(result.maxServings).toBe(2);
     expect(result.lines[0].available).toBe(150);
   });
 

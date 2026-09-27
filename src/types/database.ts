@@ -60,6 +60,68 @@ isOneToOne: false
       referencedColumns: ["organization_id","ingredient_id","id"]
     }
                   ]
+                },"cocktail_production_ingredients": {
+                  Row: {
+                    "cocktail_ingredient_id": string,"id": string,"inventory_product_id": string,"production_id": string,"quantity_used": number
+                  }
+                  Insert: {
+                    "cocktail_ingredient_id": string,"id"?: string,"inventory_product_id": string,"production_id": string,"quantity_used": number
+                  }
+                  Update: {
+                    "cocktail_ingredient_id"?: string,"id"?: string,"inventory_product_id"?: string,"production_id"?: string,"quantity_used"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cocktail_production_ingredients_cocktail_ingredient_id_fkey"
+      columns: ["cocktail_ingredient_id"]
+isOneToOne: false
+      referencedRelation: "cocktail_ingredients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cocktail_production_ingredients_inventory_product_id_fkey"
+      columns: ["inventory_product_id"]
+isOneToOne: false
+      referencedRelation: "inventory_products"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cocktail_production_ingredients_production_id_fkey"
+      columns: ["production_id"]
+isOneToOne: false
+      referencedRelation: "cocktail_productions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"cocktail_productions": {
+                  Row: {
+                    "cocktail_id": string,"created_at": string,"id": string,"location_id": string,"organization_id": string,"performed_by": string,"quantity": number
+                  }
+                  Insert: {
+                    "cocktail_id": string,"created_at"?: string,"id"?: string,"location_id": string,"organization_id": string,"performed_by"?: string,"quantity": number
+                  }
+                  Update: {
+                    "cocktail_id"?: string,"created_at"?: string,"id"?: string,"location_id"?: string,"organization_id"?: string,"performed_by"?: string,"quantity"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cocktail_productions_cocktail_id_fkey"
+      columns: ["cocktail_id"]
+isOneToOne: false
+      referencedRelation: "cocktails"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cocktail_productions_location_id_fkey"
+      columns: ["location_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cocktail_productions_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"cocktails": {
                   Row: {
                     "created_at": string,"description": string | null,"garnish": string | null,"glassware": string | null,"id": string,"image_path": string | null,"image_url": string | null,"instructions": string,"is_active": boolean,"name": string,"organization_id": string,"updated_at": string
@@ -303,6 +365,9 @@ isOneToOne: false
                            },
 "is_organization_member":
 { Args: { "target_organization_id": string }; Returns: boolean
+                           },
+"make_cocktail":
+{ Args: { "product_selections": Json,"production_quantity": number,"target_cocktail_id": string,"target_location_id": string,"target_organization_id": string }; Returns: string
                            },
 "record_stock_movement":
 { Args: { "movement_notes"?: string,"stock_movement_type": Database["public"]['Enums']["inventory_movement_type"],"stock_quantity_delta": number,"target_inventory_product_id": string,"target_location_id": string,"target_organization_id": string }; Returns: number

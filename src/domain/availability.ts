@@ -7,6 +7,7 @@ export type StockProduct = {
 };
 
 export type AvailabilityRecipeLine = {
+  lineId: string;
   ingredientId: string;
   ingredientName: string;
   unit: "ml" | "g" | "each";
@@ -40,12 +41,20 @@ export function calculateCocktailAvailability(
         return right.quantity - left.quantity;
       });
     const available = candidates.reduce((total, product) => total + product.quantity, 0);
-    return { ...line, available, canMake: available >= line.required, products: candidates };
+    return {
+      ...line,
+      available,
+      canMake: candidates.some((product) => product.quantity >= line.required),
+      products: candidates,
+    };
   });
 
   const maxServings = recipe.length === 0
     ? 0
-    : Math.min(...lines.map((line) => Math.floor(line.available / line.required)));
+    : Math.min(...lines.map((line) => Math.max(
+        0,
+        ...line.products.map((product) => Math.floor(product.quantity / line.required)),
+      )));
 
   return {
     canMake: recipe.length > 0 && lines.every((line) => line.canMake),

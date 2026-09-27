@@ -70,3 +70,8 @@ Cocktail recipes use one of three product-selection rules: any available brand,
 prefer a named product while allowing substitution, or require an exact product.
 The database enforces that preferred products belong to the recipe ingredient
 and the same organization.
+
+During service, the bartender selects the exact product used for each recipe
+ingredient. Drink production runs as one locked database transaction: it checks
+live stock and recipe rules, records exact product usage, writes inventory
+movements, updates balances, and creates production history together.
