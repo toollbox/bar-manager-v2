@@ -1,0 +1,28 @@
+import "server-only";
+
+import { redirect } from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+
+export async function requireUser() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  const userId = data?.claims.sub;
+
+  if (error || !userId) redirect("/login");
+
+  return { supabase, userId, email: data.claims.email as string | undefined };
+}
+
+export async function getMembership(userId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("organization_members")
+    .select("organization_id, role")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw new Error("Unable to load organization membership.");
+  return data;
+}
