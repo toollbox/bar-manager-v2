@@ -1,0 +1,2 @@
+-- Seed data is intentionally empty. Organization-specific development data will
+-- be added after the authentication and onboarding flow is in place.
