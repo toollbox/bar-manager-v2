@@ -75,3 +75,8 @@ During service, the bartender selects the exact product used for each recipe
 ingredient. Drink production runs as one locked database transaction: it checks
 live stock and recipe rules, records exact product usage, writes inventory
 movements, updates balances, and creates production history together.
+
+The operations dashboard reports live product, recipe, low-stock, and daily
+production totals. Purchasing recommendations refill products from their
+reorder point to target stock, round quantities to whole bottles when possible,
+estimate cost, and support receiving the delivery into inventory.

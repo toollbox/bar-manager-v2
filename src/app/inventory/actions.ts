@@ -122,6 +122,7 @@ export async function createInventoryProduct(
 
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
+  revalidatePath("/purchasing");
   return {
     status: "success",
     message: `${result.data.brand} ${result.data.name} was added.`,
@@ -207,6 +208,7 @@ export async function recordStockMovement(
 
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
+  revalidatePath("/purchasing");
   return {
     status: "success",
     message: `Movement recorded. New balance: ${Number(balance).toLocaleString()}.`,
