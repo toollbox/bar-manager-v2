@@ -4,6 +4,8 @@ import { revalidateWorkspace } from "@/lib/revalidate-workspace";
 
 import { getMembership, requireUser } from "@/data/auth";
 import { cocktailSchema, recipeLineSchema } from "@/domain/cocktails";
+import { getIngredientUnit } from "@/data/measurement";
+import { toBaseQuantity } from "@/domain/units";
 
 export type CocktailFormState = {
   status?: "success" | "error";
@@ -106,6 +108,7 @@ export async function addRecipeLine(
     preferredProductId: formData.get("preferredProductId"),
     selectionPolicy: formData.get("selectionPolicy"),
     quantityInBaseUnit: formData.get("quantityInBaseUnit"),
+    quantityUnit: formData.get("quantityUnit"),
     notes: formData.get("notes"),
   });
   if (!result.success)
@@ -122,6 +125,26 @@ export async function addRecipeLine(
     .eq("organization_id", membership.organization_id)
     .single();
   if (!cocktail) return { status: "error", message: "Cocktail not found." };
+  const unit = await getIngredientUnit(
+    supabase,
+    membership.organization_id,
+    result.data.ingredientId,
+  );
+  if (!unit) return { status: "error", message: "Ingredient not found." };
+  let quantity;
+  try {
+    quantity = toBaseQuantity(
+      result.data.quantityInBaseUnit,
+      result.data.quantityUnit,
+      unit,
+    );
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error ? error.message : "Check the amount unit.",
+    };
+  }
   if (result.data.preferredProductId) {
     const { data: product } = await supabase
       .from("inventory_products")
@@ -142,7 +165,7 @@ export async function addRecipeLine(
     ingredient_id: result.data.ingredientId,
     preferred_product_id: result.data.preferredProductId,
     selection_policy: result.data.selectionPolicy,
-    quantity_in_base_unit: result.data.quantityInBaseUnit,
+    quantity_in_base_unit: quantity,
     notes: result.data.notes,
   });
   if (error)

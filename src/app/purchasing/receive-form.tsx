@@ -3,17 +3,67 @@
 import { PackageCheck } from "lucide-react";
 import { useActionState } from "react";
 
-import { recordStockMovement, type InventoryFormState } from "@/app/inventory/actions";
+import {
+  recordStockMovement,
+  type InventoryFormState,
+} from "@/app/inventory/actions";
+import { QuantityField } from "@/components/quantity-field";
+import { resolveStockUnit, type BaseUnit } from "@/domain/units";
 
-export function ReceiveForm({ productId, locationId, suggestedQuantity, unit }: { productId: string; locationId: string; suggestedQuantity: number; unit: string }) {
-  const [state, action, pending] = useActionState(recordStockMovement, {} as InventoryFormState);
-  return <form action={action} className="mt-4">
-    <input name="productId" type="hidden" value={productId} />
-    <input name="locationId" type="hidden" value={locationId} />
-    <input name="movementType" type="hidden" value="purchase" />
-    <input name="correctionDirection" type="hidden" value="add" />
-    <input name="notes" type="hidden" value="Received from purchase plan" />
-    <div className="flex gap-2"><label className="sr-only" htmlFor={`receive-${productId}`}>Quantity received</label><div className="relative flex-1"><input className="w-full rounded-xl border border-stone-200 px-3 py-2.5 pr-12 text-sm" defaultValue={suggestedQuantity || ""} id={`receive-${productId}`} min="0.001" name="quantity" placeholder="Quantity" required step="0.001" type="number" /><span className="absolute right-3 top-2.5 text-xs text-stone-400">{unit}</span></div><button className="inline-flex items-center gap-1.5 rounded-xl bg-stone-950 px-4 text-sm font-semibold text-white disabled:opacity-50" disabled={pending}><PackageCheck size={16} />{pending ? "Saving…" : "Receive"}</button></div>
-    {state.message ? <p className={`mt-2 text-xs ${state.status === "success" ? "text-emerald-700" : "text-rose-700"}`}>{state.message}</p> : null}
-  </form>;
+export function ReceiveForm({
+  productId,
+  locationId,
+  suggestedQuantity,
+  unit,
+  stockUnit,
+}: {
+  productId: string;
+  locationId: string;
+  suggestedQuantity: number;
+  unit: BaseUnit;
+  stockUnit: string;
+}) {
+  const [state, action, pending] = useActionState(
+    recordStockMovement,
+    {} as InventoryFormState,
+  );
+  return (
+    <form action={action} className="mt-4">
+      <input name="productId" type="hidden" value={productId} />
+      <input name="locationId" type="hidden" value={locationId} />
+      <input name="movementType" type="hidden" value="purchase" />
+      <input name="correctionDirection" type="hidden" value="add" />
+      <input name="notes" type="hidden" value="Received from purchase plan" />
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1 text-xs font-semibold text-secondary">
+          <QuantityField
+            label="Quantity received"
+            name="quantity"
+            baseUnit={unit}
+            defaultUnit={resolveStockUnit(unit, stockUnit)}
+            showConversion={false}
+            defaultValue={suggestedQuantity || undefined}
+            min={0.001}
+            placeholder="Quantity"
+            required
+            inputClass="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm font-normal"
+          />
+        </div>
+        <button
+          className="mt-5 inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          disabled={pending}
+        >
+          <PackageCheck size={16} />
+          {pending ? "Saving…" : "Receive"}
+        </button>
+      </div>
+      {state.message ? (
+        <p
+          className={`mt-2 text-xs ${state.status === "success" ? "text-success" : "text-danger"}`}
+        >
+          {state.message}
+        </p>
+      ) : null}
+    </form>
+  );
 }

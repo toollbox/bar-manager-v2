@@ -41,18 +41,18 @@ export function ServiceMenu({ drinks }: { drinks: ServiceDrink[] }) {
 
   return (
     <section aria-label="Service menu" className="mt-8">
-      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+      <div className="rounded-2xl border border-border bg-surface p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-          <label className="flex-1 text-xs font-semibold text-stone-600">
+          <label className="flex-1 text-xs font-semibold text-secondary">
             Search drinks
             <div className="relative mt-1.5">
               <Search
                 aria-hidden="true"
-                className="absolute left-3 top-3 text-stone-400"
+                className="absolute left-3 top-3 text-muted-foreground"
                 size={18}
               />
               <input
-                className="w-full rounded-xl border border-stone-200 py-2.5 pl-10 pr-3 text-sm font-normal"
+                className="w-full rounded-xl border border-border py-2.5 pl-10 pr-3 text-sm font-normal"
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Name, ingredient, or brand…"
                 type="search"
@@ -60,10 +60,10 @@ export function ServiceMenu({ drinks }: { drinks: ServiceDrink[] }) {
               />
             </div>
           </label>
-          <label className="text-xs font-semibold text-stone-600 sm:w-52">
+          <label className="text-xs font-semibold text-secondary sm:w-52">
             Base spirit
             <select
-              className="mt-1.5 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm font-normal"
+              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm font-normal"
               onChange={(event) => setBaseSpirit(event.target.value)}
               value={baseSpirit}
             >
@@ -80,7 +80,7 @@ export function ServiceMenu({ drinks }: { drinks: ServiceDrink[] }) {
           </label>
           {search || baseSpirit ? (
             <button
-              className="rounded-xl px-3 py-2.5 text-sm font-semibold text-stone-600 hover:bg-stone-100"
+              className="rounded-xl px-3 py-2.5 text-sm font-semibold text-secondary hover:bg-surface-subtle"
               onClick={() => {
                 setSearch("");
                 setBaseSpirit("");
@@ -91,7 +91,7 @@ export function ServiceMenu({ drinks }: { drinks: ServiceDrink[] }) {
             </button>
           ) : null}
         </div>
-        <p aria-live="polite" className="mt-3 text-xs text-stone-500">
+        <p aria-live="polite" className="mt-3 text-xs text-muted-foreground">
           {resultCount} of {drinks.length} drinks · Click a card to see the
           recipe and pour options.
         </p>
@@ -99,30 +99,30 @@ export function ServiceMenu({ drinks }: { drinks: ServiceDrink[] }) {
       <div className="mt-5 grid items-start gap-3 lg:grid-cols-2">
         {drinks.map((drink) => (
           <article
-            className={`overflow-hidden rounded-2xl border bg-white ${drink.canMake ? "border-emerald-200" : "border-stone-200"}`}
+            className={`overflow-hidden rounded-2xl border bg-surface ${drink.canMake ? "border-success-border" : "border-border"}`}
             hidden={!matches(drink)}
             key={drink.id}
           >
             <details className="group">
-              <summary className="flex cursor-pointer list-none items-center gap-3 p-3 hover:bg-stone-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-amber-600 [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center gap-3 p-3 hover:bg-surface-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
                 {drink.thumbnail}
                 <h2 className="min-w-0 flex-1 font-semibold">{drink.name}</h2>
                 {drink.canMake ? (
                   <CheckCircle2
                     aria-label="Available"
-                    className="shrink-0 text-emerald-600"
+                    className="shrink-0 text-success"
                     size={18}
                   />
                 ) : (
                   <CircleAlert
                     aria-label="Unavailable"
-                    className="shrink-0 text-amber-600"
+                    className="shrink-0 text-warning"
                     size={18}
                   />
                 )}
                 <ChevronDown
                   aria-hidden="true"
-                  className="shrink-0 text-stone-400 transition-transform group-open:rotate-180"
+                  className="shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
                   size={18}
                 />
               </summary>
@@ -132,9 +132,9 @@ export function ServiceMenu({ drinks }: { drinks: ServiceDrink[] }) {
         ))}
       </div>
       {resultCount === 0 ? (
-        <div className="mt-5 rounded-2xl border border-dashed border-stone-300 bg-white p-8 text-center">
+        <div className="mt-5 rounded-2xl border border-dashed border-border-strong bg-surface p-8 text-center">
           <p className="font-semibold">No matching drinks</p>
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Try a different search or clear the filters.
           </p>
         </div>

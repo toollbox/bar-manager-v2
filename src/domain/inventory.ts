@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { measurementUnitSchema, toBaseQuantity, type BaseUnit } from "./units";
 
-export const baseUnits = ["ml", "g", "each"] as const;
+export const baseUnits = ["g", "ml", "fl_oz", "each"] as const;
 
 export const ingredientSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -45,19 +46,59 @@ export const createInventoryProductSchema = z
       z.string().trim().max(120).optional(),
     ),
     bottleSize: optionalNumber.pipe(z.number().positive().optional()),
+    bottleSizeUnit: measurementUnitSchema,
+    stockUnit: measurementUnitSchema,
     defaultCost: optionalNumber,
     openingQuantity: z.coerce.number().nonnegative(),
+    openingQuantityUnit: measurementUnitSchema,
     reorderPoint: z.coerce.number().nonnegative(),
+    reorderPointUnit: measurementUnitSchema,
     targetStock: z.coerce.number().nonnegative(),
+    targetStockUnit: measurementUnitSchema,
     imageUrl: z.preprocess(
       (value) => (value === "" || value === null ? undefined : value),
       z.url("Enter a valid HTTPS image URL.").startsWith("https://").optional(),
     ),
   })
-  .refine((value) => value.targetStock >= value.reorderPoint, {
-    message: "Target stock must be at least the reorder point.",
-    path: ["targetStock"],
-  });
+  .refine(
+    (value) =>
+      value.targetStockUnit !== value.reorderPointUnit ||
+      value.targetStock >= value.reorderPoint,
+    {
+      message: "Target stock must be at least the reorder point.",
+      path: ["targetStock"],
+    },
+  );
+
+export function normalizeProductQuantities(
+  input: z.infer<typeof createInventoryProductSchema>,
+  baseUnit: BaseUnit,
+) {
+  const quantities = {
+    bottleSize:
+      input.bottleSize === undefined
+        ? undefined
+        : toBaseQuantity(input.bottleSize, input.bottleSizeUnit, baseUnit),
+    openingQuantity: toBaseQuantity(
+      input.openingQuantity,
+      input.openingQuantityUnit,
+      baseUnit,
+    ),
+    reorderPoint: toBaseQuantity(
+      input.reorderPoint,
+      input.reorderPointUnit,
+      baseUnit,
+    ),
+    targetStock: toBaseQuantity(
+      input.targetStock,
+      input.targetStockUnit,
+      baseUnit,
+    ),
+  };
+  if (quantities.targetStock < quantities.reorderPoint)
+    throw new Error("Target stock must be at least the reorder point.");
+  return quantities;
+}
 
 export const manualMovementTypes = [
   "purchase",
@@ -72,6 +113,7 @@ export const stockMovementSchema = z.object({
   movementType: z.enum(manualMovementTypes),
   correctionDirection: z.enum(["add", "remove"]).default("add"),
   quantity: z.coerce.number().positive("Enter a quantity greater than zero."),
+  quantityUnit: measurementUnitSchema,
   notes: z.preprocess(
     (value) => (value === "" || value === null ? undefined : value),
     z.string().trim().max(1000).optional(),

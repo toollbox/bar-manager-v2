@@ -1,6 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
+import { InventoryMeasurements } from "./inventory-measurements";
+import type { BaseUnit } from "@/domain/units";
+import { BaseUnitSelect } from "./base-unit-select";
+import { CategorySelect } from "./category-select";
 import {
   setCatalogActive,
   updateIngredient,
@@ -9,12 +13,12 @@ import {
 } from "./actions";
 
 const input =
-  "mt-1 w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm";
+  "mt-1 h-11 w-full min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-sm";
 function Feedback({ state }: { state: InventoryFormState }) {
   return state.message ? (
     <p
       aria-live="polite"
-      className={`mt-2 text-xs ${state.status === "error" ? "text-rose-700" : "text-emerald-700"}`}
+      className={`mt-2 text-xs ${state.status === "error" ? "text-danger" : "text-success"}`}
     >
       {state.message}
     </p>
@@ -47,7 +51,7 @@ export function ActiveForm({
       }}
     >
       <button
-        className="mt-3 text-xs font-semibold text-amber-800 disabled:opacity-50"
+        className="mt-3 text-xs font-semibold text-accent-strong disabled:opacity-50"
         disabled={pending}
       >
         {active ? "Archive" : "Restore"}
@@ -61,16 +65,23 @@ type Ingredient = {
   name: string;
   category: string;
   base_unit: string;
+  default_unit: string;
   image_url: string | null;
 };
-export function IngredientEditForm({ ingredient }: { ingredient: Ingredient }) {
+export function IngredientEditForm({
+  ingredient,
+  categories = [],
+}: {
+  ingredient: Ingredient;
+  categories?: string[];
+}) {
   const [state, action, pending] = useActionState(
     updateIngredient.bind(null, ingredient.id),
     {} as InventoryFormState,
   );
   return (
     <details className="mt-3">
-      <summary className="cursor-pointer text-xs font-semibold text-stone-600">
+      <summary className="cursor-pointer text-xs font-semibold text-secondary">
         Edit ingredient
       </summary>
       <form action={action} className="mt-3 space-y-2">
@@ -85,24 +96,18 @@ export function IngredientEditForm({ ingredient }: { ingredient: Ingredient }) {
         </label>
         <label className="block text-xs">
           Category
-          <input
+          <CategorySelect
             className={input}
             defaultValue={ingredient.category}
-            name="category"
-            required
+            categories={categories}
           />
         </label>
         <label className="block text-xs">
           Base unit
-          <select
+          <BaseUnitSelect
             className={input}
-            defaultValue={ingredient.base_unit}
-            name="baseUnit"
-          >
-            <option value="ml">ml</option>
-            <option value="g">g</option>
-            <option value="each">each</option>
-          </select>
+            defaultValue={ingredient.default_unit}
+          />
         </label>
         <label className="block text-xs">
           Image URL
@@ -114,7 +119,7 @@ export function IngredientEditForm({ ingredient }: { ingredient: Ingredient }) {
           />
         </label>
         <button
-          className="rounded-lg bg-stone-950 px-3 py-2 text-xs text-white"
+          className="rounded-lg bg-primary px-3 py-2 text-xs text-primary-foreground"
           disabled={pending}
         >
           Save ingredient
@@ -131,7 +136,7 @@ type Product = {
   brand: string;
   name: string;
   bottle_size: number | null;
-  default_cost: number | null;
+  stock_unit: string;
   image_url: string | null;
   reorderPoint: number;
   targetStock: number;
@@ -139,9 +144,11 @@ type Product = {
 export function ProductEditForm({
   product,
   locationId,
+  baseUnit,
 }: {
   product: Product;
   locationId: string;
+  baseUnit: BaseUnit;
 }) {
   const [state, action, pending] = useActionState(
     updateProduct.bind(null, product.id, product.ingredient_id),
@@ -149,7 +156,7 @@ export function ProductEditForm({
   );
   return (
     <details className="mt-2">
-      <summary className="cursor-pointer text-xs font-semibold text-stone-500">
+      <summary className="cursor-pointer text-xs font-semibold text-muted-foreground">
         Edit product & stock targets
       </summary>
       <form action={action} className="mt-3 grid max-w-xl grid-cols-2 gap-2">
@@ -172,26 +179,17 @@ export function ProductEditForm({
             required
           />
         </label>
-        {(
-          [
-            ["bottleSize", "Package size", product.bottle_size],
-            ["defaultCost", "Package cost", product.default_cost],
-            ["reorderPoint", "Reorder at", product.reorderPoint],
-            ["targetStock", "Target stock", product.targetStock],
-          ] as const
-        ).map(([name, label, value]) => (
-          <label className="text-xs" key={name}>
-            {label}
-            <input
-              className={input}
-              defaultValue={value ?? ""}
-              min={name === "bottleSize" ? "0.001" : "0"}
-              name={name}
-              step="0.001"
-              type="number"
-            />
-          </label>
-        ))}
+        <div className="col-span-2 text-xs">
+          <InventoryMeasurements
+            editing
+            baseUnit={baseUnit}
+            stockUnit={product.stock_unit}
+            bottleSize={product.bottle_size}
+            reorderPoint={product.reorderPoint}
+            targetStock={product.targetStock}
+            inputClass={input}
+          />
+        </div>
         <label className="col-span-2 text-xs">
           Image URL
           <input
@@ -202,7 +200,7 @@ export function ProductEditForm({
           />
         </label>
         <button
-          className="rounded-lg bg-stone-950 px-3 py-2 text-xs text-white"
+          className="rounded-lg bg-primary px-3 py-2 text-xs text-primary-foreground"
           disabled={pending}
         >
           Save product

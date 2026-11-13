@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { measurementUnitSchema } from "./units";
 
 const optionalText = (max: number) =>
   z.preprocess(
@@ -14,7 +15,11 @@ const imageUrl = z.preprocess(
 export const cocktailSchema = z.object({
   name: z.string().trim().min(2, "Enter a cocktail name.").max(120),
   description: optionalText(500),
-  instructions: z.string().trim().min(3, "Add preparation instructions.").max(4000),
+  instructions: z
+    .string()
+    .trim()
+    .min(3, "Add preparation instructions.")
+    .max(4000),
   glassware: optionalText(120),
   garnish: optionalText(240),
   imageUrl,
@@ -28,8 +33,15 @@ export const recipeLineSchema = z
       (value) => (value === "" || value === null ? undefined : value),
       z.uuid().optional(),
     ),
-    selectionPolicy: z.enum(["any_product", "prefer_product", "require_product"]),
-    quantityInBaseUnit: z.coerce.number().positive("Enter a quantity greater than zero."),
+    selectionPolicy: z.enum([
+      "any_product",
+      "prefer_product",
+      "require_product",
+    ]),
+    quantityInBaseUnit: z.coerce
+      .number()
+      .positive("Enter a quantity greater than zero."),
+    quantityUnit: measurementUnitSchema,
     notes: optionalText(240),
   })
   .superRefine((line, context) => {

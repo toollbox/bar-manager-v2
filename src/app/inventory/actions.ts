@@ -5,9 +5,17 @@ import { z } from "zod";
 import { revalidateWorkspace } from "@/lib/revalidate-workspace";
 
 import { getMembership, requireUser } from "@/data/auth";
+import { getIngredientUnit, getProductMeasurement } from "@/data/measurement";
+import {
+  canonicalUnit,
+  formatStockQuantity,
+  resolveStockUnit,
+  toBaseQuantity,
+} from "@/domain/units";
 import {
   createIngredientSchema,
   createInventoryProductSchema,
+  normalizeProductQuantities,
   stockMovementSchema,
 } from "@/domain/inventory";
 
@@ -48,7 +56,8 @@ export async function createIngredient(
     organization_id: membership.organization_id,
     name: result.data.name,
     category: result.data.category,
-    base_unit: result.data.baseUnit,
+    base_unit: canonicalUnit(result.data.baseUnit),
+    default_unit: result.data.baseUnit,
     image_url: result.data.imageUrl,
   });
 
@@ -71,6 +80,7 @@ export async function createInventoryProduct(
   formData: FormData,
 ): Promise<InventoryFormState> {
   const result = createInventoryProductSchema.safeParse({
+    ...Object.fromEntries(formData),
     ingredientId: formData.get("ingredientId"),
     locationId: formData.get("locationId"),
     brand: formData.get("brand"),
@@ -89,6 +99,29 @@ export async function createInventoryProduct(
   }
 
   const { supabase, membership } = await requireInventoryManager();
+  const unit = await getIngredientUnit(
+    supabase,
+    membership.organization_id,
+    result.data.ingredientId,
+  );
+  if (!unit) return { status: "error", message: "Ingredient not found." };
+  let quantities;
+  let stockUnit;
+  try {
+    quantities = normalizeProductQuantities(result.data, unit);
+    stockUnit = resolveStockUnit(
+      unit,
+      result.data.stockUnit ?? result.data.bottleSizeUnit,
+    );
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Check the units and quantities.",
+    };
+  }
   const { data: productId, error } = await supabase.rpc(
     "create_inventory_product",
     {
@@ -98,11 +131,11 @@ export async function createInventoryProduct(
       product_brand: result.data.brand,
       product_name: result.data.name,
       product_variant: result.data.variant || undefined,
-      product_bottle_size: result.data.bottleSize,
-      product_default_cost: result.data.defaultCost,
-      opening_quantity: result.data.openingQuantity,
-      product_reorder_point: result.data.reorderPoint,
-      product_target_stock: result.data.targetStock,
+      product_bottle_size: quantities.bottleSize,
+      product_stock_unit: stockUnit,
+      opening_quantity: quantities.openingQuantity,
+      product_reorder_point: quantities.reorderPoint,
+      product_target_stock: quantities.targetStock,
     },
   );
 
@@ -137,7 +170,11 @@ export async function updateCatalogImage(
   entityId: string,
   imagePath: string,
 ) {
-  if (!z.enum(["ingredients", "products", "cocktails"]).safeParse(entityType).success || !z.uuid().safeParse(entityId).success) {
+  if (
+    !z.enum(["ingredients", "products", "cocktails"]).safeParse(entityType)
+      .success ||
+    !z.uuid().safeParse(entityId).success
+  ) {
     return { error: "Invalid catalog item." };
   }
   const { supabase, membership } = await requireInventoryManager();
@@ -177,6 +214,7 @@ export async function recordStockMovement(
     movementType: formData.get("movementType"),
     correctionDirection: formData.get("correctionDirection"),
     quantity: formData.get("quantity"),
+    quantityUnit: formData.get("quantityUnit"),
     notes: formData.get("notes"),
   });
 
@@ -185,14 +223,33 @@ export async function recordStockMovement(
   }
 
   const { supabase, membership } = await requireInventoryManager();
+  const measurement = await getProductMeasurement(
+    supabase,
+    membership.organization_id,
+    result.data.productId,
+  );
+  if (!measurement) return { status: "error", message: "Product not found." };
+  const unit = measurement.baseUnit;
+  let quantity;
+  try {
+    quantity = toBaseQuantity(
+      result.data.quantity,
+      result.data.quantityUnit,
+      unit,
+    );
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error ? error.message : "Check the quantity unit.",
+    };
+  }
   const shouldSubtract =
     result.data.movementType === "waste" ||
     result.data.movementType === "spill" ||
     (result.data.movementType === "correction" &&
       result.data.correctionDirection === "remove");
-  const quantityDelta = shouldSubtract
-    ? -result.data.quantity
-    : result.data.quantity;
+  const quantityDelta = shouldSubtract ? -quantity : quantity;
 
   const { data: balance, error } = await supabase.rpc("record_stock_movement", {
     target_organization_id: membership.organization_id,
@@ -215,7 +272,7 @@ export async function recordStockMovement(
   revalidateWorkspace();
   return {
     status: "success",
-    message: `Movement recorded. New balance: ${Number(balance).toLocaleString()}.`,
+    message: `Movement recorded. New balance: ${formatStockQuantity(Number(balance), unit, measurement.stockUnit)}.`,
   };
 }
 
@@ -233,7 +290,8 @@ export async function updateIngredient(
     .update({
       name: result.data.name,
       category: result.data.category,
-      base_unit: result.data.baseUnit,
+      base_unit: canonicalUnit(result.data.baseUnit),
+      default_unit: result.data.baseUnit,
       image_url: result.data.imageUrl ?? null,
     })
     .eq("id", id)
@@ -269,16 +327,41 @@ export async function updateProduct(
         "Check the product values. Target must be at least the reorder point.",
     };
   const { supabase, membership } = await requireInventoryManager();
+  const measurement = await getProductMeasurement(
+    supabase,
+    membership.organization_id,
+    id,
+  );
+  if (!measurement) return { status: "error", message: "Product not found." };
+  const unit = measurement.baseUnit;
+  let quantities;
+  let stockUnit;
+  try {
+    quantities = normalizeProductQuantities(result.data, unit);
+    stockUnit = resolveStockUnit(
+      unit,
+      result.data.stockUnit ?? measurement.stockUnit,
+    );
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "Check the units and quantities.",
+    };
+  }
   const { error } = await supabase.rpc("update_inventory_product", {
     target_organization_id: membership.organization_id,
     target_location_id: result.data.locationId,
     target_product_id: id,
     product_brand: result.data.brand,
     product_name: result.data.name,
-    product_bottle_size: result.data.bottleSize ?? null,
-    product_cost: result.data.defaultCost ?? null,
-    product_reorder_point: result.data.reorderPoint,
-    product_target_stock: result.data.targetStock,
+    product_bottle_size: quantities.bottleSize ?? null,
+    product_cost: measurement.cost,
+    product_stock_unit: stockUnit,
+    product_reorder_point: quantities.reorderPoint,
+    product_target_stock: quantities.targetStock,
     product_image_url: result.data.imageUrl,
   });
   if (error)

@@ -7,6 +7,7 @@ import { ServiceMenu } from "@/app/service/service-menu";
 import { requireWorkspace } from "@/data/workspace";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { calculateCocktailAvailability } from "@/domain/availability";
+import { formatQuantity } from "@/domain/units";
 import { getCocktailPhoto, getDefaultCatalogImage } from "@/lib/catalog-images";
 
 export default async function ServicePage() {
@@ -132,42 +133,42 @@ export default async function ServicePage() {
   ).length;
 
   return (
-    <main className="min-h-screen bg-[#f5f3ee] text-stone-950">
+    <main className="min-h-screen bg-background text-foreground">
       <WorkspaceNav />
-      <header className="border-b border-stone-200 bg-white">
+      <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <Link
-              className="grid size-10 place-items-center rounded-xl border border-stone-200 hover:bg-stone-50"
+              className="grid size-10 place-items-center rounded-xl border border-border hover:bg-surface-muted"
               href="/dashboard"
             >
               <ArrowLeft size={18} />
             </Link>
             <div>
               <p className="font-semibold">Service</p>
-              <p className="text-xs text-stone-500">{location.name}</p>
+              <p className="text-xs text-muted-foreground">{location.name}</p>
             </div>
           </div>
-          <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+          <span className="rounded-full bg-success-soft px-3 py-1.5 text-xs font-semibold text-success">
             {availableCount} of {cocktails.length} available
           </span>
         </div>
       </header>
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <p className="text-sm font-medium text-amber-700">Live menu</p>
+        <p className="text-sm font-medium text-accent-strong">Live menu</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-[-0.035em]">
           What can we make?
         </h1>
-        <p className="mt-2 max-w-2xl text-stone-500">
+        <p className="mt-2 max-w-2xl text-muted-foreground">
           Availability uses current stock and recipe brand rules. Preferred
           products appear first, followed by valid substitutions.
         </p>
         {cocktails.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center">
-            <Martini className="mx-auto text-stone-400" size={30} />
+          <div className="mt-8 rounded-2xl border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
+            <Martini className="mx-auto text-muted-foreground" size={30} />
             <h2 className="mt-4 font-semibold">No cocktails on the menu</h2>
             <Link
-              className="mt-3 inline-block text-sm font-semibold text-amber-700"
+              className="mt-3 inline-block text-sm font-semibold text-accent-strong"
               href="/cocktails"
             >
               Create a cocktail →
@@ -220,26 +221,26 @@ export default async function ServicePage() {
                 ),
                 details: (
                   <>
-                    <div className="border-t border-stone-100 px-5 py-4">
-                      <p className="text-sm text-stone-500">
+                    <div className="border-t border-border-subtle px-5 py-4">
+                      <p className="text-sm text-muted-foreground">
                         {cocktail.description ||
                           [cocktail.glassware, cocktail.garnish]
                             .filter(Boolean)
                             .join(" · ") ||
                           "Recipe-defined cocktail"}
                       </p>
-                      <p className="mt-3 whitespace-pre-line text-sm text-stone-700">
+                      <p className="mt-3 whitespace-pre-line text-sm text-secondary">
                         {cocktail.instructions}
                       </p>
                       <p
-                        className={`mt-3 text-xs font-semibold ${cocktail.availability.canMake ? "text-emerald-700" : "text-amber-700"}`}
+                        className={`mt-3 text-xs font-semibold ${cocktail.availability.canMake ? "text-success" : "text-warning"}`}
                       >
                         {cocktail.availability.canMake
                           ? `${cocktail.availability.maxServings} serving${cocktail.availability.maxServings === 1 ? "" : "s"} possible`
                           : "Cannot make right now"}
                       </p>
                       {photo ? (
-                        <p className="mt-3 text-[10px] text-stone-500">
+                        <p className="mt-3 text-[10px] text-muted-foreground">
                           Photo:{" "}
                           <a
                             className="underline"
@@ -266,9 +267,9 @@ export default async function ServicePage() {
                         </p>
                       ) : null}
                     </div>
-                    <div className="divide-y divide-stone-100 px-5">
+                    <div className="divide-y divide-border-subtle px-5">
                       {cocktail.availability.lines.length === 0 ? (
-                        <p className="py-5 text-sm text-amber-700">
+                        <p className="py-5 text-sm text-warning">
                           Recipe has no ingredients.
                         </p>
                       ) : (
@@ -276,13 +277,13 @@ export default async function ServicePage() {
                           <div className="py-4" key={line.lineId}>
                             <div className="flex items-center justify-between gap-3">
                               <p className="text-sm font-semibold">
-                                {line.required.toLocaleString()} {line.unit}{" "}
+                                {formatQuantity(line.required, line.unit)}{" "}
                                 {line.ingredientName}
                               </p>
                               <span
-                                className={`text-xs font-semibold ${line.canMake ? "text-emerald-700" : "text-rose-700"}`}
+                                className={`text-xs font-semibold ${line.canMake ? "text-success" : "text-danger"}`}
                               >
-                                {line.available.toLocaleString()} {line.unit}{" "}
+                                {formatQuantity(line.available, line.unit)}{" "}
                                 across eligible products
                               </span>
                             </div>
@@ -290,12 +291,14 @@ export default async function ServicePage() {
                               <div className="mt-2 flex flex-wrap gap-1.5">
                                 {line.products.map((product, index) => (
                                   <span
-                                    className={`rounded-full px-2.5 py-1 text-xs ${index === 0 && line.preferredProductId === product.id ? "bg-amber-100 text-amber-800" : "bg-stone-100 text-stone-600"}`}
+                                    className={`rounded-full px-2.5 py-1 text-xs ${index === 0 && line.preferredProductId === product.id ? "bg-accent-soft text-accent-strong" : "bg-surface-subtle text-secondary"}`}
                                     key={product.id}
                                   >
                                     {product.label} ·{" "}
-                                    {product.quantity.toLocaleString()}{" "}
-                                    {line.unit}
+                                    {formatQuantity(
+                                      product.quantity,
+                                      line.unit,
+                                    )}
                                     {index === 0 &&
                                     line.preferredProductId === product.id
                                       ? " · preferred"
@@ -304,7 +307,7 @@ export default async function ServicePage() {
                                 ))}
                               </div>
                             ) : (
-                              <p className="mt-2 flex items-center gap-1.5 text-xs text-rose-600">
+                              <p className="mt-2 flex items-center gap-1.5 text-xs text-danger">
                                 <PackageSearch size={14} />
                                 No eligible product in stock
                               </p>
@@ -329,14 +332,14 @@ export default async function ServicePage() {
           />
         )}
         {(historyResult.data ?? []).length > 0 ? (
-          <section className="mt-8 rounded-2xl border border-stone-200 bg-white">
-            <div className="border-b border-stone-100 px-6 py-4">
+          <section className="mt-8 rounded-2xl border border-border bg-surface">
+            <div className="border-b border-border-subtle px-6 py-4">
               <h2 className="font-semibold">Recent production</h2>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 The latest drinks recorded at {location.name}.
               </p>
             </div>
-            <div className="divide-y divide-stone-100">
+            <div className="divide-y divide-border-subtle">
               {(historyResult.data ?? []).map((production) => (
                 <div
                   className="flex items-center justify-between px-6 py-4 text-sm"
@@ -344,13 +347,13 @@ export default async function ServicePage() {
                 >
                   <div>
                     <p className="font-semibold">{production.cocktail_name}</p>
-                    <p className="mt-0.5 text-xs text-stone-400">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {new Date(production.created_at).toLocaleString("en-US", {
                         timeZone: location.timezone,
                       })}
                     </p>
                   </div>
-                  <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold">
+                  <span className="rounded-full bg-surface-subtle px-3 py-1 text-xs font-semibold">
                     × {production.quantity}
                   </span>
                 </div>

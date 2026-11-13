@@ -143,13 +143,13 @@ isOneToOne: false
                   ]
                 },"ingredients": {
                   Row: {
-                    "base_unit": Database["public"]['Enums']["base_unit"],"category": string,"created_at": string,"id": string,"image_path": string | null,"image_url": string | null,"is_active": boolean,"name": string,"organization_id": string,"updated_at": string
+                    "base_unit": Database["public"]['Enums']["base_unit"],"category": string,"created_at": string,"default_unit": string,"id": string,"image_path": string | null,"image_url": string | null,"is_active": boolean,"name": string,"organization_id": string,"updated_at": string
                   }
                   Insert: {
-                    "base_unit": Database["public"]['Enums']["base_unit"],"category": string,"created_at"?: string,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"is_active"?: boolean,"name": string,"organization_id": string,"updated_at"?: string
+                    "base_unit": Database["public"]['Enums']["base_unit"],"category": string,"created_at"?: string,"default_unit": string,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"is_active"?: boolean,"name": string,"organization_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "base_unit"?: Database["public"]['Enums']["base_unit"],"category"?: string,"created_at"?: string,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"updated_at"?: string
+                    "base_unit"?: Database["public"]['Enums']["base_unit"],"category"?: string,"created_at"?: string,"default_unit"?: string,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -218,13 +218,13 @@ isOneToOne: false
                   ]
                 },"inventory_products": {
                   Row: {
-                    "barcode": string | null,"bottle_size": number | null,"brand": string,"created_at": string,"default_cost": number | null,"id": string,"image_path": string | null,"image_url": string | null,"ingredient_id": string,"is_active": boolean,"name": string,"organization_id": string,"sku": string | null,"updated_at": string,"variant": string | null
+                    "barcode": string | null,"bottle_size": number | null,"brand": string,"created_at": string,"default_cost": number | null,"id": string,"image_path": string | null,"image_url": string | null,"ingredient_id": string,"is_active": boolean,"name": string,"organization_id": string,"sku": string | null,"stock_unit": string,"updated_at": string,"variant": string | null
                   }
                   Insert: {
-                    "barcode"?: string | null,"bottle_size"?: number | null,"brand": string,"created_at"?: string,"default_cost"?: number | null,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"ingredient_id": string,"is_active"?: boolean,"name": string,"organization_id": string,"sku"?: string | null,"updated_at"?: string,"variant"?: string | null
+                    "barcode"?: string | null,"bottle_size"?: number | null,"brand": string,"created_at"?: string,"default_cost"?: number | null,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"ingredient_id": string,"is_active"?: boolean,"name": string,"organization_id": string,"sku"?: string | null,"stock_unit": string,"updated_at"?: string,"variant"?: string | null
                   }
                   Update: {
-                    "barcode"?: string | null,"bottle_size"?: number | null,"brand"?: string,"created_at"?: string,"default_cost"?: number | null,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"ingredient_id"?: string,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"sku"?: string | null,"updated_at"?: string,"variant"?: string | null
+                    "barcode"?: string | null,"bottle_size"?: number | null,"brand"?: string,"created_at"?: string,"default_cost"?: number | null,"id"?: string,"image_path"?: string | null,"image_url"?: string | null,"ingredient_id"?: string,"is_active"?: boolean,"name"?: string,"organization_id"?: string,"sku"?: string | null,"stock_unit"?: string,"updated_at"?: string,"variant"?: string | null
                   }
                   Relationships: [
                     {
@@ -370,6 +370,17 @@ isOneToOne: false
                   Update: {
                     "created_at"?: string,"id"?: string,"name"?: string
                   }
+                  Relationships: []
+                },"user_preferences": {
+                  Row: {
+                    "theme": string,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "theme"?: string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "theme"?: string,"updated_at"?: string,"user_id"?: string
+                  }
                   Relationships: [
                     
                   ]
@@ -383,7 +394,7 @@ isOneToOne: false
 { Args: { "invitation_code": string }; Returns: string
                            },
 "create_inventory_product":
-{ Args: { "opening_quantity"?: number,"product_bottle_size"?: number,"product_brand": string,"product_default_cost"?: number,"product_name": string,"product_reorder_point"?: number,"product_target_stock"?: number,"product_variant"?: string,"target_ingredient_id": string,"target_location_id": string,"target_organization_id": string }; Returns: string
+{ Args: { "opening_quantity"?: number,"product_bottle_size"?: number,"product_brand": string,"product_default_cost"?: number,"product_name": string,"product_reorder_point"?: number,"product_stock_unit"?: string,"product_target_stock"?: number,"product_variant"?: string,"target_ingredient_id": string,"target_location_id": string,"target_organization_id": string }; Returns: string
                            },
 "create_location":
 { Args: { "location_name": string,"location_timezone": string,"target_organization_id": string }; Returns: string
@@ -421,7 +432,7 @@ isOneToOne: false
             }[]
                            },
 "update_inventory_product":
-{ Args: { "product_bottle_size": number,"product_brand": string,"product_cost": number,"product_image_url"?: string,"product_name": string,"product_reorder_point": number,"product_target_stock": number,"target_location_id": string,"target_organization_id": string,"target_product_id": string }; Returns: undefined
+{ Args: { "product_bottle_size": number,"product_brand": string,"product_cost": number,"product_image_url"?: string,"product_name": string,"product_reorder_point": number,"product_stock_unit"?: string,"product_target_stock": number,"target_location_id": string,"target_organization_id": string,"target_product_id": string }; Returns: undefined
                            }
           }
           Enums: {

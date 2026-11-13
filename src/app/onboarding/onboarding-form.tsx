@@ -22,14 +22,14 @@ export function OnboardingForm() {
 
       <div>
         <label
-          className="text-sm font-medium text-stone-800"
+          className="text-sm font-medium text-foreground"
           htmlFor="organizationName"
         >
           Business name
         </label>
         <input
           autoFocus
-          className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-3 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10"
+          className="mt-2 w-full rounded-xl border border-border px-4 py-3 outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10"
           id="organizationName"
           maxLength={120}
           name="organizationName"
@@ -37,7 +37,7 @@ export function OnboardingForm() {
           required
         />
         {state.errors?.organizationName ? (
-          <p className="mt-1.5 text-sm text-rose-600">
+          <p className="mt-1.5 text-sm text-danger">
             Enter at least 2 characters.
           </p>
         ) : null}
@@ -45,13 +45,13 @@ export function OnboardingForm() {
 
       <div>
         <label
-          className="text-sm font-medium text-stone-800"
+          className="text-sm font-medium text-foreground"
           htmlFor="locationName"
         >
           First location
         </label>
         <input
-          className="mt-2 w-full rounded-xl border border-stone-200 px-4 py-3 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10"
+          className="mt-2 w-full rounded-xl border border-border px-4 py-3 outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10"
           id="locationName"
           maxLength={120}
           name="locationName"
@@ -59,27 +59,27 @@ export function OnboardingForm() {
           required
         />
         {state.errors?.locationName ? (
-          <p className="mt-1.5 text-sm text-rose-600">
+          <p className="mt-1.5 text-sm text-danger">
             Enter at least 2 characters.
           </p>
         ) : null}
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-stone-50 px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+      <div className="rounded-xl border border-border bg-surface-muted px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Timezone
         </p>
-        <p className="mt-1 text-sm text-stone-700">{timezone}</p>
+        <p className="mt-1 text-sm text-secondary">{timezone}</p>
       </div>
 
       {state.message ? (
-        <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <p className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">
           {state.message}
         </p>
       ) : null}
 
       <button
-        className="w-full rounded-xl bg-stone-950 px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:opacity-60"
+        className="w-full rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover disabled:opacity-60"
         disabled={pending}
         type="submit"
       >

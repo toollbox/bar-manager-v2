@@ -35,6 +35,20 @@ describe("catalog image URLs", () => {
   });
 });
 
+describe("ingredient measurement choices", () => {
+  it("accepts g, ml, fl oz and each as separate selections", () => {
+    for (const baseUnit of ["g", "ml", "fl_oz", "each"]) {
+      const result = createIngredientSchema.safeParse({
+        name: "Test ingredient",
+        category: "Test",
+        baseUnit,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.baseUnit).toBe(baseUnit);
+    }
+  });
+});
+
 describe("recipeItemSchema", () => {
   it("allows a recipe to use any brand for a generic ingredient", () => {
     const result = recipeItemSchema.safeParse({

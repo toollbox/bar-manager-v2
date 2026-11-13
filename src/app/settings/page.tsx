@@ -1,5 +1,7 @@
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { requireWorkspace } from "@/data/workspace";
+import { getCurrentTheme } from "@/data/theme";
+import { ThemeForm } from "./theme-form";
 import {
   AcceptInvitationForm,
   InvitationForm,
@@ -14,14 +16,27 @@ export default async function SettingsPage() {
   });
   if (error) throw new Error("Unable to load team members.");
   const owner = membership.role === "owner";
+  const currentTheme = await getCurrentTheme();
   return (
-    <main className="min-h-screen bg-[#f5f3ee]">
+    <main className="min-h-screen bg-background">
       <WorkspaceNav />
       <div className="mx-auto max-w-5xl space-y-6 px-6 py-8">
         <h1 className="text-3xl font-semibold">Workspace settings</h1>
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section
+          className="rounded-2xl border border-border bg-surface p-6"
+          aria-labelledby="appearance-heading"
+        >
+          <h2 id="appearance-heading" className="font-semibold">
+            Appearance
+          </h2>
+          <p className="mb-5 mt-1 text-sm text-muted-foreground">
+            Your theme follows your account across devices and workspaces.
+          </p>
+          <ThemeForm currentTheme={currentTheme} />
+        </section>
+        <section className="rounded-2xl border border-border bg-surface p-6">
           <h2 className="mb-4 font-semibold">Team members</h2>
-          <div className="divide-y divide-stone-100">
+          <div className="divide-y divide-border-subtle">
             {members?.map((member) => (
               <div
                 className="flex flex-wrap items-center justify-between gap-3 py-4"
@@ -31,7 +46,9 @@ export default async function SettingsPage() {
                 {owner ? (
                   <MemberForm role={member.role} userId={member.user_id} />
                 ) : (
-                  <span className="text-sm text-stone-500">{member.role}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {member.role}
+                  </span>
                 )}
               </div>
             ))}
@@ -43,19 +60,21 @@ export default async function SettingsPage() {
             </div>
           ) : null}
         </section>
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section className="rounded-2xl border border-border bg-surface p-6">
           <h2 className="mb-4 font-semibold">Locations</h2>
           <ul className="mb-5 space-y-2 text-sm">
             {locations.map((location) => (
               <li key={location.id}>
                 {location.name}{" "}
-                <span className="text-stone-500">· {location.timezone}</span>
+                <span className="text-muted-foreground">
+                  · {location.timezone}
+                </span>
               </li>
             ))}
           </ul>
           {owner ? <LocationForm /> : null}
         </section>
-        <section className="rounded-2xl border border-stone-200 bg-white p-6">
+        <section className="rounded-2xl border border-border bg-surface p-6">
           <h2 className="mb-4 font-semibold">Accept a workspace invitation</h2>
           <AcceptInvitationForm />
         </section>

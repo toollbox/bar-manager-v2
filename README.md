@@ -144,6 +144,38 @@ preferred or required branded product. Inventory is held against exact products
 such as `Smirnoff No. 21` or `Grey Goose Original`. Production records the exact
 product poured so stock, cost, substitutions, and forecasts remain accurate.
 
+Recipes display both milliliters and US fluid ounces, for example
+`50 ml (≈1.69 fl oz)`. Inventory products have a saved **Stock unit** selector
+beside package size: liquids support ml or US fl oz; counted items use each,
+and weighed items use grams. Package size, on-hand stock, reorder levels, and
+target stock use that one chosen unit, such as `400 ml` or `13 fl oz`. Changing
+the unit converts existing amounts and preserves the physical stock. The
+inventory forms do not ask for package cost, and purchasing does not show cost
+estimates. Stock movements and purchase receipts default to the product's
+saved unit. Recipe amount entry still supports either liquid unit and shows
+a conversion preview. Ounces here mean US **fluid** ounces.
+The General Products **Base unit** dropdown has four separate choices:
+`g`, `ml`, `fl oz`, and `each`. Its saved choice supplies the default for new
+branded products and recipe entry. Changing between ml and fl oz does not
+reinterpret existing inventory amounts or override branded products' units.
+The **Category** dropdown includes 20 common bar ingredient categories, covering
+spirits, liqueurs, wine, beer, mixers, juices, syrups, bitters, produce, garnishes,
+and other bar essentials. Existing organization categories remain available in
+both create and edit forms, including custom categories from archived items.
+
+Conversions use `1 US fl oz = 29.5735295625 ml`, from the US liquid gallon
+definition in [NIST's measurement tables](https://www.nist.gov/document/2025-nist-handbook-44-appx-c).
+The server converts inputs to the ingredient's canonical unit after checking
+its organization and unit compatibility. Liquid stock remains stored in ml;
+there is no need to change existing ingredients or recipes. Migration
+`20261113180000_volume_unit_precision.sql` expands quantity precision to retain
+conversions through production, ledger entries, and history. Only display
+values are rounded; displayed ounce equivalents use `≈`.
+Migration `20261113181000_product_stock_units.sql` backfills existing products
+with their ingredient's base unit and adds a validated per-product stock unit.
+Migration `20261113182000_ingredient_default_units.sql` persists the General
+Products unit choice, retaining canonical ml for liquid stock calculations.
+
 Inventory categories and branded products can use an external HTTPS image or a
 custom upload. Uploads are stored in the public `catalog-images` Supabase Storage
 bucket, limited to 5 MB, and restricted to JPEG, PNG, WebP, and AVIF files.
@@ -181,13 +213,24 @@ movements, updates balances, and creates production history together.
 The operations dashboard reports live product, recipe, low-stock, and daily
 production totals. Purchasing recommendations refill products from their
 reorder point to target stock, round quantities to whole bottles when possible,
-estimate cost, and support receiving the delivery into inventory.
+and support receiving the delivery into inventory.
 
 Owners can load a repeat-safe starter bar from the dashboard. It includes 14
 common ingredients, 15 stocked products with opening balances and reorder
 targets, and six complete classic cocktail recipes.
 
 ## Workspace management
+
+In **Settings → Appearance**, choose **Warm Linen**, **Midnight Brass**,
+**Botanical**, **Cobalt**, or **Bordeaux**, then click **Save theme**. Each theme
+defines the application palette, heading typography, form surfaces, and corner
+styles. Warm Linen is the default. A saved choice applies immediately across
+the application and follows the user's account across sessions, devices, and
+workspaces. Owners, managers, and bartenders can each choose their own theme.
+Preferences are stored in `user_preferences` with row-level security limiting
+access to the signed-in user's own row. Migration
+`20261113183000_user_theme_preferences.sql` creates the preferences table;
+`20261113183100_theme_preferences_grants.sql` limits its granted operations.
 
 Use the navigation bar to select the current location. Inventory, purchasing,
 service, dashboard totals, and reports all use that selection. Owners can add
@@ -196,7 +239,7 @@ seven days and can only be accepted by a verified account with the recipient's
 email. Codes are shared manually; the app does not send invitation email yet.
 Owners can change roles or remove members, but cannot remove the last owner.
 
-Inventory supports editing details, costs and stock targets, plus archiving and
+Inventory supports editing details, measurement units and stock targets, plus archiving and
 restoring catalog items. Base units are fixed once an ingredient is in use.
 Production history stores recipe/product snapshots so later recipe edits and
 catalog renames do not rewrite historical pours. Reports include date filters,

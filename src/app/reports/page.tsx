@@ -2,6 +2,7 @@ import Link from "next/link";
 import { z } from "zod";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { requireWorkspace } from "@/data/workspace";
+import { formatQuantity } from "@/domain/units";
 
 type Report = {
   drinks: number;
@@ -67,12 +68,12 @@ export default async function ReportsPage({
   const query = (page: number) =>
     `/reports?${new URLSearchParams({ from: parsed.success ? parsed.data.from : today, through: parsed.success ? parsed.data.through : today, page: String(page) })}`;
   return (
-    <main className="min-h-screen bg-[#f5f3ee]">
+    <main className="min-h-screen bg-background">
       <WorkspaceNav />
       <div className="mx-auto max-w-6xl space-y-6 px-6 py-8">
         <div>
           <h1 className="text-3xl font-semibold">Production reports</h1>
-          <p className="mt-2 text-sm text-stone-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             {location.name} · Dates and times use {location.timezone}.
           </p>
         </div>
@@ -80,7 +81,7 @@ export default async function ReportsPage({
           <label className="text-sm">
             From
             <input
-              className="ml-2 rounded-lg border border-stone-200 bg-white p-2"
+              className="ml-2 rounded-lg border border-border bg-surface p-2"
               defaultValue={parsed.success ? parsed.data.from : today}
               name="from"
               required
@@ -90,36 +91,36 @@ export default async function ReportsPage({
           <label className="text-sm">
             Through
             <input
-              className="ml-2 rounded-lg border border-stone-200 bg-white p-2"
+              className="ml-2 rounded-lg border border-border bg-surface p-2"
               defaultValue={parsed.success ? parsed.data.through : today}
               name="through"
               required
               type="date"
             />
           </label>
-          <button className="rounded-lg bg-stone-950 px-4 py-2 text-sm text-white">
+          <button className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">
             Run report
           </button>
         </form>
         {!valid ? (
-          <p role="alert" className="text-sm text-rose-700">
+          <p role="alert" className="text-sm text-danger">
             Choose a valid date range of at most 367 days.
           </p>
         ) : null}
         {report ? (
           <>
             <div className="grid gap-4 sm:grid-cols-2">
-              <article className="rounded-2xl bg-white p-6">
-                <p className="text-sm text-stone-500">Drinks produced</p>
+              <article className="rounded-2xl bg-surface p-6">
+                <p className="text-sm text-muted-foreground">Drinks produced</p>
                 <p className="mt-2 text-3xl font-semibold">{report.drinks}</p>
               </article>
-              <article className="rounded-2xl bg-white p-6">
-                <p className="text-sm text-stone-500">Production events</p>
+              <article className="rounded-2xl bg-surface p-6">
+                <p className="text-sm text-muted-foreground">Production events</p>
                 <p className="mt-2 text-3xl font-semibold">{report.events}</p>
               </article>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <section className="rounded-2xl bg-white p-6">
+              <section className="rounded-2xl bg-surface p-6">
                 <h2 className="mb-4 font-semibold">Popular cocktails</h2>
                 {report.cocktails.map((c) => (
                   <p className="flex justify-between py-2 text-sm" key={c.name}>
@@ -128,7 +129,7 @@ export default async function ReportsPage({
                   </p>
                 ))}
               </section>
-              <section className="rounded-2xl bg-white p-6">
+              <section className="rounded-2xl bg-surface p-6">
                 <h2 className="mb-4 font-semibold">Product consumption</h2>
                 {report.usage.map((p) => (
                   <p
@@ -136,36 +137,34 @@ export default async function ReportsPage({
                     key={`${p.label}-${p.unit}`}
                   >
                     <span>{p.label}</span>
-                    <span>
-                      {p.quantity.toLocaleString()} {p.unit}
-                    </span>
+                    <span>{formatQuantity(p.quantity, p.unit)}</span>
                   </p>
                 ))}
               </section>
             </div>
-            <section className="rounded-2xl bg-white p-6">
+            <section className="rounded-2xl bg-surface p-6">
               <h2 className="mb-4 font-semibold">Production history</h2>
               {!report.events ? (
-                <p className="text-sm text-stone-500">
+                <p className="text-sm text-muted-foreground">
                   No drinks recorded in this date range.
                 </p>
               ) : null}
-              <div className="divide-y divide-stone-100">
+              <div className="divide-y divide-border-subtle">
                 {report.history.map((event) => (
                   <details className="py-4" key={event.id}>
                     <summary className="cursor-pointer text-sm font-semibold">
                       {event.quantity} × {event.name}{" "}
-                      <span className="ml-3 font-normal text-stone-500">
+                      <span className="ml-3 font-normal text-muted-foreground">
                         {new Date(event.created_at).toLocaleString("en-US", {
                           timeZone: location.timezone,
                         })}
                       </span>
                     </summary>
-                    <ul className="mt-3 space-y-2 text-sm text-stone-600">
+                    <ul className="mt-3 space-y-2 text-sm text-secondary">
                       {event.ingredients.map((i, index) => (
                         <li key={index}>
                           {i.ingredient}: {i.product} ·{" "}
-                          {i.quantity.toLocaleString()} {i.unit}
+                          {formatQuantity(i.quantity, i.unit)}
                         </li>
                       ))}
                     </ul>

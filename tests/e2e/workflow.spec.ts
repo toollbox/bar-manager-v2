@@ -112,7 +112,7 @@ test("owner can load stock, edit targets, pour, preserve history, and switch loc
     const purchase = page
       .locator("article")
       .filter({ hasText: "Smirnoff No. 21 Vodka" });
-    await purchase.getByLabel("Quantity received").fill("750");
+    await purchase.getByLabel("Quantity received", { exact: true }).fill("750");
     await purchase
       .getByRole("button", { name: "Receive", exact: true })
       .click();
@@ -326,6 +326,12 @@ test("invited bartender can join and pour but cannot manage stock or team", asyn
     ).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Save role" })).toHaveCount(
       0,
+    );
+    await page.getByRole("radio", { name: "Botanical", exact: true }).check();
+    await page.getByRole("button", { name: "Save theme", exact: true }).click();
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-theme",
+      "botanical",
     );
     await page.goto("/service");
     const drink = page.locator("article").filter({

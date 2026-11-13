@@ -10,18 +10,18 @@ import {
   type SettingsState,
 } from "./actions";
 
-const input = "rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm";
+const input = "rounded-xl border border-border bg-surface px-3 py-2 text-sm";
 const button =
-  "rounded-xl bg-stone-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50";
+  "rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50";
 function Feedback({ state }: { state: SettingsState }) {
   return state.message ? (
     <div
       aria-live="polite"
-      className={`mt-3 text-sm ${state.error ? "text-rose-700" : "text-emerald-700"}`}
+      className={`mt-3 text-sm ${state.error ? "text-danger" : "text-success"}`}
     >
       <p>{state.message}</p>
       {state.code ? (
-        <code className="mt-2 block select-all break-all rounded-lg bg-amber-50 p-3 text-stone-900">
+        <code className="mt-2 block select-all break-all rounded-lg bg-accent-soft p-3 text-foreground">
           {state.code}
         </code>
       ) : null}

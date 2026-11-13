@@ -1,17 +1,39 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireWorkspace } from "@/data/workspace";
 import { requireUser } from "@/data/auth";
 import { revalidateWorkspace } from "@/lib/revalidate-workspace";
+import { isThemeId } from "@/domain/themes";
 
 export type SettingsState = {
   message?: string;
   error?: boolean;
   code?: string;
 };
+
+export async function saveTheme(
+  _state: SettingsState,
+  formData: FormData,
+): Promise<SettingsState> {
+  const theme = formData.get("theme");
+  if (!isThemeId(theme))
+    return { error: true, message: "Choose one of the available themes." };
+  const { supabase, userId } = await requireUser();
+  const { error } = await supabase
+    .from("user_preferences")
+    .upsert({ user_id: userId, theme });
+  if (error)
+    return {
+      error: true,
+      message: "Your theme could not be saved. Please try again.",
+    };
+  revalidatePath("/", "layout");
+  return { message: "Theme saved." };
+}
 
 export async function selectOrganization(formData: FormData) {
   const { supabase, userId } = await requireUser();

@@ -6,6 +6,7 @@ import { useActionState, useState } from "react";
 import { makeCocktail, type ProductionState } from "@/app/service/actions";
 import type { LineAvailability } from "@/domain/availability";
 import { resolveServiceSelections } from "@/domain/service-selection";
+import { formatQuantity } from "@/domain/units";
 
 const initialState: ProductionState = {};
 
@@ -47,7 +48,7 @@ export function MakeDrinkForm({
   return (
     <form
       action={action}
-      className="border-t border-stone-100 bg-stone-50 p-5"
+      className="border-t border-border-subtle bg-surface-muted p-5"
       onSubmit={(event) => {
         if (!canSubmit || pending) event.preventDefault();
       }}
@@ -62,10 +63,10 @@ export function MakeDrinkForm({
         value={JSON.stringify(selections)}
       />
       <div className="flex items-end gap-3">
-        <label className="w-28 text-xs font-semibold text-stone-600">
+        <label className="w-28 text-xs font-semibold text-secondary">
           Quantity
           <input
-            className="mt-1.5 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm"
+            className="mt-1.5 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm"
             max={Math.min(maxServings, 100)}
             min="1"
             name="quantity"
@@ -80,20 +81,20 @@ export function MakeDrinkForm({
             value={quantity}
           />
         </label>
-        <p className="pb-2.5 text-xs text-stone-500">
+        <p className="pb-2.5 text-xs text-muted-foreground">
           Choose the exact product poured:
         </p>
       </div>
       <div className="mt-3 space-y-3">
         {lines.map((line) => (
           <label
-            className="block text-xs font-semibold text-stone-600"
+            className="block text-xs font-semibold text-secondary"
             key={line.lineId}
           >
             {line.ingredientName} ·{" "}
-            {(line.required * quantity).toLocaleString()} {line.unit}
+            {formatQuantity(line.required * quantity, line.unit)}
             <select
-              className="mt-1.5 w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm font-normal"
+              className="mt-1.5 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm font-normal"
               disabled={pending}
               required
               onChange={(event) => {
@@ -114,8 +115,8 @@ export function MakeDrinkForm({
                     key={product.id}
                     value={product.id}
                   >
-                    {product.label} · {product.quantity.toLocaleString()}{" "}
-                    {line.unit}
+                    {product.label} ·{" "}
+                    {formatQuantity(product.quantity, line.unit)}
                     {enough ? "" : " · insufficient"}
                   </option>
                 );
@@ -125,7 +126,7 @@ export function MakeDrinkForm({
         ))}
       </div>
       {!canSubmit ? (
-        <p className="mt-3 text-xs text-stone-500">
+        <p className="mt-3 text-xs text-muted-foreground">
           Choose a product for every ingredient and a valid quantity to make
           this drink.
         </p>
@@ -133,7 +134,7 @@ export function MakeDrinkForm({
       {showMessage && state.message ? (
         <p
           aria-live="polite"
-          className={`mt-3 rounded-xl px-3 py-2.5 text-sm ${state.status === "success" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-700"}`}
+          className={`mt-3 rounded-xl px-3 py-2.5 text-sm ${state.status === "success" ? "bg-success-soft text-success" : "bg-danger-soft text-danger"}`}
         >
           {state.status === "success" ? (
             <Check className="mr-1.5 inline" size={15} />
@@ -142,7 +143,7 @@ export function MakeDrinkForm({
         </p>
       ) : null}
       <button
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-stone-950 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-800 disabled:opacity-50"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
         disabled={pending || !canSubmit}
       >
         <Martini size={17} />

@@ -53,10 +53,10 @@ export function CatalogImage({
     (currentPath && getStorageImageUrl(currentPath)) || imageUrl || fallbackUrl;
   const showCredit = !currentPath && !imageUrl && credit;
   const creditText = showCredit ? (
-    <p className="text-[10px] leading-relaxed text-stone-500">
+    <p className="text-[10px] leading-relaxed text-muted-foreground">
       Photo:{" "}
       <a
-        className="underline hover:text-stone-800"
+        className="underline hover:text-foreground"
         href={credit.source}
         target="_blank"
         rel="noreferrer"
@@ -66,7 +66,7 @@ export function CatalogImage({
       {" · "}
       {credit.licenseUrl ? (
         <a
-          className="underline hover:text-stone-800"
+          className="underline hover:text-foreground"
           href={credit.licenseUrl}
           target="_blank"
           rel="noreferrer"
@@ -142,7 +142,7 @@ export function CatalogImage({
     <div className={compact ? "flex items-center gap-3" : "space-y-3"}>
       <div
         aria-label={alt}
-        className={`relative overflow-hidden bg-stone-100 ${compact ? "size-16 shrink-0 rounded-xl" : `${aspect === "portrait" ? "aspect-[4/5]" : aspect === "square" ? "aspect-square" : "aspect-[4/3]"} w-full rounded-2xl`}`}
+        className={`relative overflow-hidden bg-surface-subtle ${compact ? "size-16 shrink-0 rounded-xl" : `${aspect === "portrait" ? "aspect-[4/5]" : aspect === "square" ? "aspect-square" : "aspect-[4/3]"} w-full rounded-2xl`}`}
         role="img"
         style={{
           backgroundImage: `${fit === "cover" ? "linear-gradient(to top, rgba(28,25,23,.12), transparent 55%), " : ""}url("${src.replaceAll('"', "%22")}")`,
@@ -152,7 +152,7 @@ export function CatalogImage({
         }}
       >
         {uploading ? (
-          <span className="absolute inset-0 grid place-items-center bg-stone-950/55 text-white">
+          <span className="absolute inset-0 grid place-items-center bg-black/55 text-overlay-foreground">
             <LoaderCircle className="animate-spin" size={20} />
           </span>
         ) : null}
@@ -174,7 +174,7 @@ export function CatalogImage({
                 type="file"
               />
               <button
-                className={`${compact ? "text-xs" : "w-full rounded-xl border border-stone-200 px-3 py-2 text-sm"} inline-flex items-center justify-center gap-1.5 font-semibold text-stone-600 hover:bg-stone-50 disabled:opacity-60`}
+                className={`${compact ? "text-xs" : "w-full rounded-xl border border-border px-3 py-2 text-sm"} inline-flex items-center justify-center gap-1.5 font-semibold text-secondary hover:bg-surface-muted disabled:opacity-60`}
                 disabled={uploading}
                 onClick={() => inputRef.current?.click()}
                 type="button"
@@ -183,12 +183,12 @@ export function CatalogImage({
                 {currentPath ? "Replace" : "Upload image"}
               </button>
               {error ? (
-                <p className="mt-1 text-xs text-rose-600">{error}</p>
+                <p className="mt-1 text-xs text-danger">{error}</p>
               ) : null}
             </>
           ) : null}
           {compact && showCredit ? (
-            <details className="mt-1 max-w-40 text-[10px] text-stone-500">
+            <details className="mt-1 max-w-40 text-[10px] text-muted-foreground">
               <summary className="cursor-pointer">Photo credit</summary>
               {creditText}
             </details>

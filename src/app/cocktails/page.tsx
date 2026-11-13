@@ -10,6 +10,7 @@ import {
 import { CatalogImage } from "@/app/inventory/catalog-image";
 import { requireWorkspace } from "@/data/workspace";
 import { WorkspaceNav } from "@/components/workspace-nav";
+import { formatQuantity } from "@/domain/units";
 import { RemoveLineForm } from "./remove-line-form";
 import { getCocktailPhoto, getDefaultCatalogImage } from "@/lib/catalog-images";
 
@@ -35,7 +36,7 @@ export default async function CocktailsPage() {
         .order("created_at"),
       supabase
         .from("ingredients")
-        .select("id, name, base_unit, is_active")
+        .select("id, name, base_unit, default_unit, is_active")
         .eq("organization_id", membership.organization_id)
         .order("name"),
       supabase
@@ -67,48 +68,48 @@ export default async function CocktailsPage() {
   } as const;
 
   return (
-    <main className="min-h-screen bg-[#f5f3ee] text-stone-950">
+    <main className="min-h-screen bg-background text-foreground">
       <WorkspaceNav />
-      <header className="border-b border-stone-200 bg-white">
+      <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <Link
-              className="grid size-10 place-items-center rounded-xl border border-stone-200 hover:bg-stone-50"
+              className="grid size-10 place-items-center rounded-xl border border-border hover:bg-surface-muted"
               href="/dashboard"
             >
               <ArrowLeft size={18} />
             </Link>
             <div>
               <p className="font-semibold">Cocktails & recipes</p>
-              <p className="text-xs text-stone-500">Build the service menu</p>
+              <p className="text-xs text-muted-foreground">Build the service menu</p>
             </div>
           </div>
-          <span className="rounded-full px-3 py-1.5 text-xs font-semibold text-stone-500 ring-1 ring-stone-200">
+          <span className="rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground ring-1 ring-border">
             {membership.role}
           </span>
         </div>
       </header>
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div>
-          <p className="text-sm font-medium text-amber-700">Recipe book</p>
+          <p className="text-sm font-medium text-accent-strong">Recipe book</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-[-0.035em]">
             Cocktail management
           </h1>
-          <p className="mt-2 max-w-2xl text-stone-500">
+          <p className="mt-2 max-w-2xl text-muted-foreground">
             Define each drink once, then choose whether its recipe accepts any
             brand, prefers one, or requires one.
           </p>
         </div>
 
         {canManage ? (
-          <section className="mt-8 rounded-2xl border border-stone-200 bg-white p-6">
+          <section className="mt-8 rounded-2xl border border-border bg-surface p-6">
             <div className="mb-5 flex items-center gap-3">
-              <span className="grid size-10 place-items-center rounded-xl bg-amber-100 text-amber-800">
+              <span className="grid size-10 place-items-center rounded-xl bg-accent-soft text-accent-strong">
                 <Martini size={19} />
               </span>
               <div>
                 <h2 className="font-semibold">Create a cocktail</h2>
-                <p className="text-sm text-stone-500">
+                <p className="text-sm text-muted-foreground">
                   Add the drink first, then build its ingredient list.
                 </p>
               </div>
@@ -119,10 +120,10 @@ export default async function CocktailsPage() {
 
         <section className="mt-8 space-y-6">
           {cocktails.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center">
-              <Martini className="mx-auto text-stone-400" size={30} />
+            <div className="rounded-2xl border border-dashed border-border-strong bg-surface px-6 py-16 text-center">
+              <Martini className="mx-auto text-muted-foreground" size={30} />
               <h2 className="mt-4 font-semibold">No cocktails yet</h2>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Create the first drink above.
               </p>
             </div>
@@ -133,11 +134,11 @@ export default async function CocktailsPage() {
               );
               return (
                 <article
-                  className="overflow-hidden rounded-2xl border border-stone-200 bg-white"
+                  className="overflow-hidden rounded-2xl border border-border bg-surface"
                   key={cocktail.id}
                 >
                   <div className="grid lg:grid-cols-[260px_1fr]">
-                    <div className="border-b border-stone-100 p-4 lg:border-b-0 lg:border-r">
+                    <div className="border-b border-border-subtle p-4 lg:border-b-0 lg:border-r">
                       <CatalogImage
                         alt={`${cocktail.name} cocktail`}
                         aspect="portrait"
@@ -160,7 +161,7 @@ export default async function CocktailsPage() {
                           <h2 className="text-xl font-semibold">
                             {cocktail.name}
                           </h2>
-                          <p className="mt-1 text-sm text-stone-500">
+                          <p className="mt-1 text-sm text-muted-foreground">
                             {cocktail.description || "No description yet"}
                           </p>
                         </div>
@@ -172,7 +173,7 @@ export default async function CocktailsPage() {
                               value={cocktail.id}
                             />
                             <button
-                              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-stone-400 hover:bg-rose-50 hover:text-rose-700"
+                              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-muted-foreground hover:bg-danger-soft hover:text-danger"
                               title="Archive cocktail"
                             >
                               <Archive size={15} /> Archive
@@ -181,16 +182,16 @@ export default async function CocktailsPage() {
                         ) : null}
                       </div>
                       <div className="mt-5">
-                        <h3 className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           Recipe
                         </h3>
                         {recipe.length === 0 ? (
-                          <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                          <p className="mt-3 rounded-xl bg-accent-soft px-4 py-3 text-sm text-accent-strong">
                             This cocktail needs ingredients before availability
                             can be calculated.
                           </p>
                         ) : (
-                          <ul className="mt-2 divide-y divide-stone-100">
+                          <ul className="mt-2 divide-y divide-border-subtle">
                             {recipe.map((line) => {
                               const ingredient = ingredientMap.get(
                                 line.ingredient_id,
@@ -205,12 +206,13 @@ export default async function CocktailsPage() {
                                 >
                                   <div>
                                     <p className="text-sm font-semibold">
-                                      {Number(
-                                        line.quantity_in_base_unit,
-                                      ).toLocaleString()}{" "}
-                                      {ingredient?.base_unit} {ingredient?.name}
+                                      {formatQuantity(
+                                        Number(line.quantity_in_base_unit),
+                                        ingredient?.base_unit,
+                                      )}{" "}
+                                      {ingredient?.name}
                                     </p>
-                                    <p className="mt-0.5 text-xs text-stone-500">
+                                    <p className="mt-0.5 text-xs text-muted-foreground">
                                       {ruleLabels[line.selection_policy]}
                                       {product
                                         ? ` ${product.brand} ${product.name}`
@@ -234,17 +236,17 @@ export default async function CocktailsPage() {
                             ingredients={ingredients}
                             products={products}
                           />
-                          <details className="mt-4 rounded-xl border border-stone-200">
-                            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-stone-600">
+                          <details className="mt-4 rounded-xl border border-border">
+                            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-secondary">
                               Edit cocktail details
                             </summary>
-                            <div className="border-t border-stone-100 p-4">
+                            <div className="border-t border-border-subtle p-4">
                               <CocktailEditForm cocktail={cocktail} />
                             </div>
                           </details>
                         </div>
                       ) : (
-                        <p className="mt-5 text-sm text-stone-500">
+                        <p className="mt-5 text-sm text-muted-foreground">
                           Only owners and managers can edit recipes.
                         </p>
                       )}

@@ -10,6 +10,7 @@ import { ReceiveForm } from "@/app/purchasing/receive-form";
 import { requireWorkspace } from "@/data/workspace";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { calculateReorder } from "@/domain/purchasing";
+import { formatStockQuantity } from "@/domain/units";
 
 export default async function PurchasingPage() {
   const { supabase, membership, location } = await requireWorkspace();
@@ -18,7 +19,7 @@ export default async function PurchasingPage() {
     await Promise.all([
       supabase
         .from("inventory_products")
-        .select("id, ingredient_id, brand, name, bottle_size, default_cost")
+        .select("id, ingredient_id, brand, name, bottle_size, stock_unit")
         .eq("organization_id", membership.organization_id)
         .eq("is_active", true),
       supabase
@@ -68,73 +69,62 @@ export default async function PurchasingPage() {
         targetStock: Number(locationSettings?.target_stock ?? 0),
         bottleSize:
           product.bottle_size === null ? null : Number(product.bottle_size),
-        bottleCost:
-          product.default_cost === null ? null : Number(product.default_cost),
+        bottleCost: null,
       }),
     };
   });
   const lowRows = rows
     .filter((row) => row.isLow)
     .sort((a, b) => a.quantity - b.quantity);
-  const estimatedTotal = lowRows.reduce(
-    (total, row) => total + (row.estimatedCost ?? 0),
-    0,
-  );
   const canReceive =
     membership.role === "owner" || membership.role === "manager";
 
   return (
-    <main className="min-h-screen bg-[#f5f3ee] text-stone-950">
+    <main className="min-h-screen bg-background text-foreground">
       <WorkspaceNav />
-      <header className="border-b border-stone-200 bg-white">
+      <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <Link
-              className="grid size-10 place-items-center rounded-xl border border-stone-200 hover:bg-stone-50"
+              className="grid size-10 place-items-center rounded-xl border border-border hover:bg-surface-muted"
               href="/dashboard"
             >
               <ArrowLeft size={18} />
             </Link>
             <div>
               <p className="font-semibold">Purchasing</p>
-              <p className="text-xs text-stone-500">{location.name}</p>
+              <p className="text-xs text-muted-foreground">{location.name}</p>
             </div>
           </div>
-          <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
+          <span className="rounded-full bg-warning-soft px-3 py-1.5 text-xs font-semibold text-warning">
             {lowRows.length} to reorder
           </span>
         </div>
       </header>
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <p className="text-sm font-medium text-amber-700">Stock planning</p>
+        <p className="text-sm font-medium text-accent-strong">Stock planning</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-[-0.035em]">
           Reorder recommendations
         </h1>
-        <p className="mt-2 max-w-2xl text-stone-500">
+        <p className="mt-2 max-w-2xl text-muted-foreground">
           Suggestions refill low products to their target level and round up to
           whole bottles when package size is known.
         </p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-stone-200 bg-white p-5">
-            <p className="text-sm text-stone-500">Products to order</p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <p className="text-sm text-muted-foreground">Products to order</p>
             <p className="mt-2 text-3xl font-semibold">{lowRows.length}</p>
           </div>
-          <div className="rounded-2xl border border-stone-200 bg-white p-5">
-            <p className="text-sm text-stone-500">Estimated cost</p>
-            <p className="mt-2 text-3xl font-semibold">
-              ${estimatedTotal.toFixed(2)}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-stone-200 bg-white p-5">
-            <p className="text-sm text-stone-500">Location</p>
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <p className="text-sm text-muted-foreground">Location</p>
             <p className="mt-2 text-lg font-semibold">{location.name}</p>
           </div>
         </div>
         {lowRows.length === 0 ? (
-          <div className="mt-6 rounded-2xl border border-stone-200 bg-white px-6 py-16 text-center">
-            <CircleCheck className="mx-auto text-emerald-600" size={32} />
+          <div className="mt-6 rounded-2xl border border-border bg-surface px-6 py-16 text-center">
+            <CircleCheck className="mx-auto text-success" size={32} />
             <h2 className="mt-4 font-semibold">Stock levels look healthy</h2>
-            <p className="mt-1 text-sm text-stone-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               No products are at or below their reorder point.
             </p>
           </div>
@@ -142,43 +132,51 @@ export default async function PurchasingPage() {
           <section className="mt-6 grid gap-4 md:grid-cols-2">
             {lowRows.map((row) => (
               <article
-                className="rounded-2xl border border-stone-200 bg-white p-5"
+                className="rounded-2xl border border-border bg-surface p-5"
                 key={row.id}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       {row.ingredient?.name}
                     </p>
                     <h2 className="mt-1 font-semibold">
                       {row.brand} {row.name}
                     </h2>
                   </div>
-                  <ShoppingCart className="text-amber-600" size={20} />
+                  <ShoppingCart className="text-accent-strong" size={20} />
                 </div>
-                <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                  <div className="rounded-xl bg-rose-50 p-3">
-                    <p className="text-xs text-rose-600">On hand</p>
+                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                  <div className="rounded-xl bg-danger-soft p-3">
+                    <p className="text-xs text-danger">On hand</p>
                     <p className="mt-1 font-semibold">
-                      {row.quantity.toLocaleString()}{" "}
-                      {row.ingredient?.base_unit}
+                      {formatStockQuantity(
+                        row.quantity,
+                        row.ingredient?.base_unit ?? "each",
+                        row.stock_unit,
+                      )}
                     </p>
                   </div>
-                  <div className="rounded-xl bg-stone-50 p-3">
-                    <p className="text-xs text-stone-500">Order</p>
+                  <div className="rounded-xl bg-surface-muted p-3">
+                    <p className="text-xs text-muted-foreground">Order</p>
                     <p className="mt-1 font-semibold">
                       {row.suggestedPackages !== null
                         ? `${row.suggestedPackages} bottle${row.suggestedPackages === 1 ? "" : "s"}`
-                        : `${row.suggestedQuantity.toLocaleString()} ${row.ingredient?.base_unit}`}
+                        : formatStockQuantity(
+                            row.suggestedQuantity,
+                            row.ingredient?.base_unit ?? "each",
+                            row.stock_unit,
+                          )}
                     </p>
-                  </div>
-                  <div className="rounded-xl bg-stone-50 p-3">
-                    <p className="text-xs text-stone-500">Estimate</p>
-                    <p className="mt-1 font-semibold">
-                      {row.estimatedCost === null
-                        ? "—"
-                        : `$${row.estimatedCost.toFixed(2)}`}
-                    </p>
+                    {row.suggestedPackages !== null ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatStockQuantity(
+                          row.suggestedPackages * Number(row.bottle_size),
+                          row.ingredient?.base_unit ?? "each",
+                          row.stock_unit,
+                        )}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 {canReceive ? (
@@ -191,9 +189,10 @@ export default async function PurchasingPage() {
                         : row.suggestedQuantity
                     }
                     unit={row.ingredient?.base_unit ?? "each"}
+                    stockUnit={row.stock_unit}
                   />
                 ) : (
-                  <p className="mt-4 text-xs text-stone-500">
+                  <p className="mt-4 text-xs text-muted-foreground">
                     A manager can record delivery receipt.
                   </p>
                 )}
@@ -201,9 +200,9 @@ export default async function PurchasingPage() {
             ))}
           </section>
         )}
-        <div className="mt-6 flex items-center gap-2 text-xs text-stone-400">
+        <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
           <PackageOpen size={14} />
-          Add bottle size and cost in inventory for package and cost estimates.
+          Add bottle size in inventory for package estimates.
         </div>
       </div>
     </main>

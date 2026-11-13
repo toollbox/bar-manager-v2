@@ -13,6 +13,7 @@ import { logout } from "@/app/dashboard/actions";
 import { StarterBarCard } from "@/app/dashboard/starter-bar-card";
 import { requireWorkspace } from "@/data/workspace";
 import { WorkspaceNav } from "@/components/workspace-nav";
+import { formatStockQuantity } from "@/domain/units";
 
 export default async function DashboardPage() {
   const { supabase, email, membership, location } = await requireWorkspace();
@@ -33,12 +34,12 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase
       .from("inventory_products")
-      .select("id, brand, name")
+      .select("id, brand, name, ingredient_id, stock_unit")
       .eq("organization_id", membership.organization_id)
       .eq("is_active", true),
     supabase
       .from("ingredients")
-      .select("id")
+      .select("id, base_unit")
       .eq("organization_id", membership.organization_id)
       .eq("is_active", true),
     supabase
@@ -77,6 +78,9 @@ export default async function DashboardPage() {
     ]),
   );
   const productMap = new Map(products.map((item) => [item.id, item]));
+  const ingredientMap = new Map(
+    (ingredientsResult.data ?? []).map((item) => [item.id, item]),
+  );
   const lowStock = (settingsResult.data ?? []).filter(
     (item) =>
       productMap.has(item.inventory_product_id) &&
@@ -116,26 +120,26 @@ export default async function DashboardPage() {
   ] as const;
 
   return (
-    <main className="min-h-screen bg-[#f5f3ee] text-stone-950">
+    <main className="min-h-screen bg-background text-foreground">
       <WorkspaceNav />
-      <header className="border-b border-stone-200 bg-white">
+      <header className="border-b border-border bg-surface">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-amber-500">
+            <span className="grid size-10 place-items-center rounded-xl bg-accent text-accent-foreground">
               <GlassWater size={20} />
             </span>
             <div>
               <p className="font-semibold leading-tight">{organization.name}</p>
-              <p className="text-xs text-stone-500">{location.name}</p>
+              <p className="text-xs text-muted-foreground">{location.name}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-stone-500 sm:inline">
+            <span className="hidden text-sm text-muted-foreground sm:inline">
               {email}
             </span>
             <form action={logout}>
               <button
-                className="rounded-lg border border-stone-200 px-3 py-2 text-sm font-medium hover:bg-stone-50"
+                className="rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-surface-muted"
                 type="submit"
               >
                 Sign out
@@ -148,7 +152,7 @@ export default async function DashboardPage() {
         <nav className="space-y-1">
           {navigation.map(({ name, icon: Icon, active, href }) => (
             <Link
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${active ? "bg-stone-950 text-white" : "text-stone-500 hover:bg-white hover:text-stone-900"}`}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-surface hover:text-foreground"}`}
               href={href}
               key={name}
             >
@@ -160,40 +164,40 @@ export default async function DashboardPage() {
         <section>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <p className="text-sm font-medium text-amber-700">Operations</p>
+              <p className="text-sm font-medium text-accent-strong">Operations</p>
               <h1 className="mt-1 text-3xl font-semibold tracking-[-0.035em]">
                 Today at {location.name}
               </h1>
-              <p className="mt-2 text-stone-500">
+              <p className="mt-2 text-muted-foreground">
                 Live stock, menu, and production activity.
               </p>
             </div>
-            <span className="w-fit rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+            <span className="w-fit rounded-full bg-success-soft px-3 py-1.5 text-xs font-semibold text-success">
               Workspace connected
             </span>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {metrics.map(([label, value, detail]) => (
               <article
-                className="rounded-2xl border border-stone-200 bg-white p-5"
+                className="rounded-2xl border border-border bg-surface p-5"
                 key={label}
               >
-                <p className="text-sm text-stone-500">{label}</p>
+                <p className="text-sm text-muted-foreground">{label}</p>
                 <p className="mt-3 text-4xl font-semibold tracking-tight">
                   {value}
                 </p>
-                <p className="mt-3 text-xs text-stone-400">{detail}</p>
+                <p className="mt-3 text-xs text-muted-foreground">{detail}</p>
               </article>
             ))}
           </div>
           {lowStock.length > 0 ? (
-            <article className="mt-6 overflow-hidden rounded-2xl border border-amber-200 bg-white">
-              <div className="flex items-center justify-between border-b border-amber-100 px-6 py-5">
+            <article className="mt-6 overflow-hidden rounded-2xl border border-accent-border bg-surface">
+              <div className="flex items-center justify-between border-b border-accent-border px-6 py-5">
                 <div className="flex items-center gap-3">
-                  <CircleAlert className="text-amber-600" size={20} />
+                  <CircleAlert className="text-warning" size={20} />
                   <div>
                     <h2 className="font-semibold">Low-stock attention</h2>
-                    <p className="text-sm text-stone-500">
+                    <p className="text-sm text-muted-foreground">
                       {lowStock.length} product
                       {lowStock.length === 1 ? "" : "s"} at or below reorder
                       level.
@@ -201,7 +205,7 @@ export default async function DashboardPage() {
                   </div>
                 </div>
                 <Link
-                  className="text-sm font-semibold text-amber-700"
+                  className="text-sm font-semibold text-accent-strong"
                   href="/purchasing"
                 >
                   Open plan →
@@ -211,7 +215,7 @@ export default async function DashboardPage() {
                 const product = productMap.get(item.inventory_product_id);
                 return (
                   <div
-                    className="flex items-center justify-between border-b border-stone-100 px-6 py-4 last:border-0"
+                    className="flex items-center justify-between border-b border-border-subtle px-6 py-4 last:border-0"
                     key={item.inventory_product_id}
                   >
                     <span className="text-sm font-semibold">
@@ -219,10 +223,15 @@ export default async function DashboardPage() {
                         ? `${product.brand} ${product.name}`
                         : "Unknown product"}
                     </span>
-                    <span className="text-xs text-stone-500">
-                      {(
-                        balances.get(item.inventory_product_id) ?? 0
-                      ).toLocaleString()}{" "}
+                    <span className="text-xs text-muted-foreground">
+                      {formatStockQuantity(
+                        balances.get(item.inventory_product_id) ?? 0,
+                        product
+                          ? (ingredientMap.get(product.ingredient_id)
+                              ?.base_unit ?? "each")
+                          : "each",
+                        product?.stock_unit,
+                      )}{" "}
                       remaining
                     </span>
                   </div>
@@ -230,15 +239,15 @@ export default async function DashboardPage() {
               })}
             </article>
           ) : (
-            <article className="mt-6 flex items-center justify-between rounded-2xl border border-stone-200 bg-white px-6 py-5">
+            <article className="mt-6 flex items-center justify-between rounded-2xl border border-border bg-surface px-6 py-5">
               <div>
                 <h2 className="font-semibold">Inventory levels are healthy</h2>
-                <p className="mt-1 text-sm text-stone-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   No configured products need reordering.
                 </p>
               </div>
               <Link
-                className="text-sm font-semibold text-stone-600"
+                className="text-sm font-semibold text-secondary"
                 href="/inventory"
               >
                 Review inventory →
@@ -247,30 +256,30 @@ export default async function DashboardPage() {
           )}
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <Link
-              className="flex items-center justify-between rounded-2xl border border-stone-200 bg-white p-6 hover:border-amber-300"
+              className="flex items-center justify-between rounded-2xl border border-border bg-surface p-6 hover:border-accent-border"
               href="/service"
             >
               <span>
                 <span className="block font-semibold">Open service menu</span>
-                <span className="mt-1 block text-sm text-stone-500">
+                <span className="mt-1 block text-sm text-muted-foreground">
                   Make drinks and record exact products poured.
                 </span>
               </span>
-              <ChevronRight className="text-stone-400" />
+              <ChevronRight className="text-muted-foreground" />
             </Link>
             <Link
-              className="flex items-center justify-between rounded-2xl border border-stone-200 bg-white p-6 hover:border-amber-300"
+              className="flex items-center justify-between rounded-2xl border border-border bg-surface p-6 hover:border-accent-border"
               href="/purchasing"
             >
               <span>
                 <span className="block font-semibold">
                   Review purchase plan
                 </span>
-                <span className="mt-1 block text-sm text-stone-500">
+                <span className="mt-1 block text-sm text-muted-foreground">
                   Replenish products to target stock.
                 </span>
               </span>
-              <ChevronRight className="text-stone-400" />
+              <ChevronRight className="text-muted-foreground" />
             </Link>
           </div>
           {membership.role === "owner" ? <StarterBarCard /> : null}

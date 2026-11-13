@@ -1,0 +1,23 @@
+// Keep the starter category names stable; service uses Spirit to find base spirits.
+export const ingredientCategories = [
+  "Spirit",
+  "Liqueur",
+  "Wine & Fortified Wine",
+  "Beer & Cider",
+  "Non-Alcoholic Spirit",
+  "Mixer",
+  "Juice",
+  "Syrup",
+  "Sweetener",
+  "Acid & Saline",
+  "Bitters",
+  "Fruit & Citrus",
+  "Herbs & Spices",
+  "Garnish",
+  "Dairy & Alternatives",
+  "Coffee & Tea",
+  "Puree & Concentrate",
+  "Egg & Foaming Agent",
+  "Water & Ice",
+  "Other",
+] as const;

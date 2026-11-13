@@ -3,6 +3,9 @@ import Link from "next/link";
 import { requireWorkspace } from "@/data/workspace";
 import { selectLocation, selectOrganization } from "@/app/settings/actions";
 
+const controlClass =
+  "h-11 min-w-0 rounded-xl border border-border bg-surface px-3 text-sm";
+
 export async function WorkspaceNav() {
   const { supabase, locations, location, membership } =
     await requireWorkspace();
@@ -12,11 +15,11 @@ export async function WorkspaceNav() {
     .order("created_at");
   if (error) throw new Error("Unable to load workspaces.");
   return (
-    <div className="border-b border-stone-200 bg-white px-6 py-3">
+    <div className="workspace-nav border-b border-border bg-surface px-6 py-3">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
         <nav
           aria-label="Workspace"
-          className="flex flex-wrap gap-4 text-sm font-medium text-stone-600"
+          className="flex flex-wrap gap-4 text-sm font-medium text-secondary"
         >
           {[
             ["Dashboard", "/dashboard"],
@@ -27,7 +30,7 @@ export async function WorkspaceNav() {
             ["Reports", "/reports"],
             ["Settings", "/settings"],
           ].map(([label, href]) => (
-            <Link className="hover:text-amber-700" href={href} key={href}>
+            <Link className="hover:text-accent-strong" href={href} key={href}>
               {label}
             </Link>
           ))}
@@ -36,13 +39,13 @@ export async function WorkspaceNav() {
           {organizations && organizations.length > 1 ? (
             <form
               action={selectOrganization}
-              className="flex items-center gap-2"
+              className="flex min-w-0 items-center gap-2 text-sm"
             >
               <label className="sr-only" htmlFor="organization">
                 Current workspace
               </label>
               <select
-                className="rounded-lg border border-stone-200 px-2 py-1 text-sm"
+                className={controlClass}
                 defaultValue={membership.organization_id}
                 id="organization"
                 name="organizationId"
@@ -53,17 +56,22 @@ export async function WorkspaceNav() {
                   </option>
                 ))}
               </select>
-              <button className="rounded-lg border border-stone-200 px-2 py-1 text-xs font-semibold">
+              <button
+                className={`${controlClass} shrink-0 whitespace-nowrap font-semibold hover:bg-surface-muted`}
+              >
                 Change workspace
               </button>
             </form>
           ) : null}
-          <form action={selectLocation} className="flex items-center gap-2">
+          <form
+            action={selectLocation}
+            className="flex min-w-0 items-center gap-2 text-sm"
+          >
             <label className="sr-only" htmlFor="location">
               Current location
             </label>
             <select
-              className="rounded-lg border border-stone-200 px-2 py-1 text-sm"
+              className={controlClass}
               defaultValue={location.id}
               id="location"
               name="locationId"
@@ -74,7 +82,9 @@ export async function WorkspaceNav() {
                 </option>
               ))}
             </select>
-            <button className="rounded-lg border border-stone-200 px-2 py-1 text-xs font-semibold">
+            <button
+              className={`${controlClass} shrink-0 whitespace-nowrap font-semibold hover:bg-surface-muted`}
+            >
               Switch
             </button>
           </form>
