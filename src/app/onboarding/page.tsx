@@ -2,6 +2,7 @@ import { Building2, MapPin, PackageCheck } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { OnboardingForm } from "@/app/onboarding/onboarding-form";
+import { AcceptInvitationForm } from "@/app/settings/settings-forms";
 import { getMembership, requireUser } from "@/data/auth";
 
 export default async function OnboardingPage() {
@@ -48,6 +49,10 @@ export default async function OnboardingPage() {
             Both names can be changed later in settings.
           </p>
           <OnboardingForm />
+          <div className="mt-8 border-t border-stone-200 pt-6">
+            <h3 className="mb-3 font-semibold">Already invited to a bar?</h3>
+            <AcceptInvitationForm />
+          </div>
         </section>
       </div>
     </main>

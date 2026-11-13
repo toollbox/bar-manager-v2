@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getMembership, requireUser } from "@/data/auth";
+import { revalidateWorkspace } from "@/lib/revalidate-workspace";
 
 export type ProductionState = {
   status?: "success" | "error";
@@ -15,6 +15,7 @@ const productionSchema = z.object({
   locationId: z.uuid(),
   quantity: z.coerce.number().int().min(1).max(100),
   selections: z.record(z.uuid(), z.uuid()),
+  requestId: z.uuid(),
 });
 
 export async function makeCocktail(
@@ -25,19 +26,28 @@ export async function makeCocktail(
   try {
     selections = JSON.parse(String(formData.get("selections") ?? "{}"));
   } catch {
-    return { status: "error", message: "Select a product for every ingredient." };
+    return {
+      status: "error",
+      message: "Select a product for every ingredient.",
+    };
   }
   const result = productionSchema.safeParse({
     cocktailId: formData.get("cocktailId"),
     locationId: formData.get("locationId"),
     quantity: formData.get("quantity"),
     selections,
+    requestId: formData.get("requestId"),
   });
-  if (!result.success) return { status: "error", message: "Check the quantity and product selections." };
+  if (!result.success)
+    return {
+      status: "error",
+      message: "Check the quantity and product selections.",
+    };
 
   const { supabase, userId } = await requireUser();
   const membership = await getMembership(userId);
-  if (!membership) return { status: "error", message: "Organization membership is required." };
+  if (!membership)
+    return { status: "error", message: "Organization membership is required." };
 
   const { error } = await supabase.rpc("make_cocktail", {
     target_organization_id: membership.organization_id,
@@ -45,8 +55,10 @@ export async function makeCocktail(
     target_cocktail_id: result.data.cocktailId,
     production_quantity: result.data.quantity,
     product_selections: result.data.selections,
+    request_id: result.data.requestId,
   });
   if (error) {
+    revalidateWorkspace();
     const message = error.message.includes("Insufficient inventory")
       ? "Stock changed and is no longer sufficient. Review the refreshed quantities."
       : error.message.includes("eligible")
@@ -55,9 +67,7 @@ export async function makeCocktail(
     return { status: "error", message };
   }
 
-  revalidatePath("/service");
-  revalidatePath("/inventory");
-  revalidatePath("/dashboard");
+  revalidateWorkspace();
   return {
     status: "success",
     message: `${result.data.quantity} drink${result.data.quantity === 1 ? "" : "s"} made. Inventory and history were updated.`,

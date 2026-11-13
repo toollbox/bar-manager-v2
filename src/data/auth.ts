@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,9 +21,11 @@ export async function getMembership(userId: string) {
     .from("organization_members")
     .select("organization_id, role")
     .eq("user_id", userId)
-    .limit(1)
-    .maybeSingle();
+    .order("created_at");
 
   if (error) throw new Error("Unable to load organization membership.");
-  return data;
+  const selected = (await cookies()).get("bar-organization")?.value;
+  return (
+    data?.find((item) => item.organization_id === selected) ?? data?.[0] ?? null
+  );
 }

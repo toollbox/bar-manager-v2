@@ -3,7 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 import { getPublicEnvironment } from "@/lib/env";
-import type { Database } from "@/types/database";
+import type { Database } from "@/types/supabase";
 
 let browserClient:
   | ReturnType<typeof createBrowserClient<Database>>

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateWorkspace } from "@/lib/revalidate-workspace";
 
 import { getMembership, requireUser } from "@/data/auth";
 import { cocktailSchema, recipeLineSchema } from "@/domain/cocktails";
@@ -36,21 +36,31 @@ export async function createCocktail(
   formData: FormData,
 ): Promise<CocktailFormState> {
   const result = cocktailInput(formData);
-  if (!result.success) return { status: "error", errors: result.error.flatten().fieldErrors };
+  if (!result.success)
+    return { status: "error", errors: result.error.flatten().fieldErrors };
   const { supabase, membership } = await requireRecipeManager();
   const { error } = await supabase.from("cocktails").insert({
     organization_id: membership.organization_id,
     name: result.data.name,
-    description: result.data.description,
+    description: result.data.description ?? null,
     instructions: result.data.instructions,
-    glassware: result.data.glassware,
-    garnish: result.data.garnish,
-    image_url: result.data.imageUrl,
+    glassware: result.data.glassware ?? null,
+    garnish: result.data.garnish ?? null,
+    image_url: result.data.imageUrl ?? null,
   });
-  if (error) return { status: "error", message: error.code === "23505" ? "A cocktail with this name already exists." : "Could not create the cocktail." };
-  revalidatePath("/cocktails");
-  revalidatePath("/dashboard");
-  return { status: "success", message: `${result.data.name} was created. Add its recipe below.` };
+  if (error)
+    return {
+      status: "error",
+      message:
+        error.code === "23505"
+          ? "A cocktail with this name already exists."
+          : "Could not create the cocktail.",
+    };
+  revalidateWorkspace();
+  return {
+    status: "success",
+    message: `${result.data.name} was created. Add its recipe below.`,
+  };
 }
 
 export async function updateCocktail(
@@ -59,18 +69,30 @@ export async function updateCocktail(
   formData: FormData,
 ): Promise<CocktailFormState> {
   const result = cocktailInput(formData);
-  if (!result.success) return { status: "error", errors: result.error.flatten().fieldErrors };
+  if (!result.success)
+    return { status: "error", errors: result.error.flatten().fieldErrors };
   const { supabase, membership } = await requireRecipeManager();
-  const { error } = await supabase.from("cocktails").update({
-    name: result.data.name,
-    description: result.data.description,
-    instructions: result.data.instructions,
-    glassware: result.data.glassware,
-    garnish: result.data.garnish,
-    image_url: result.data.imageUrl,
-  }).eq("id", cocktailId).eq("organization_id", membership.organization_id);
-  if (error) return { status: "error", message: error.code === "23505" ? "That cocktail name is already in use." : "Could not update the cocktail." };
-  revalidatePath("/cocktails");
+  const { error } = await supabase
+    .from("cocktails")
+    .update({
+      name: result.data.name,
+      description: result.data.description ?? null,
+      instructions: result.data.instructions,
+      glassware: result.data.glassware ?? null,
+      garnish: result.data.garnish ?? null,
+      image_url: result.data.imageUrl ?? null,
+    })
+    .eq("id", cocktailId)
+    .eq("organization_id", membership.organization_id);
+  if (error)
+    return {
+      status: "error",
+      message:
+        error.code === "23505"
+          ? "That cocktail name is already in use."
+          : "Could not update the cocktail.",
+    };
+  revalidateWorkspace();
   return { status: "success", message: "Cocktail details updated." };
 }
 
@@ -86,13 +108,33 @@ export async function addRecipeLine(
     quantityInBaseUnit: formData.get("quantityInBaseUnit"),
     notes: formData.get("notes"),
   });
-  if (!result.success) return { status: "error", errors: result.error.flatten().fieldErrors, message: "Check the recipe line." };
+  if (!result.success)
+    return {
+      status: "error",
+      errors: result.error.flatten().fieldErrors,
+      message: "Check the recipe line.",
+    };
   const { supabase, membership } = await requireRecipeManager();
-  const { data: cocktail } = await supabase.from("cocktails").select("id").eq("id", result.data.cocktailId).eq("organization_id", membership.organization_id).single();
+  const { data: cocktail } = await supabase
+    .from("cocktails")
+    .select("id")
+    .eq("id", result.data.cocktailId)
+    .eq("organization_id", membership.organization_id)
+    .single();
   if (!cocktail) return { status: "error", message: "Cocktail not found." };
   if (result.data.preferredProductId) {
-    const { data: product } = await supabase.from("inventory_products").select("id").eq("id", result.data.preferredProductId).eq("ingredient_id", result.data.ingredientId).eq("organization_id", membership.organization_id).single();
-    if (!product) return { status: "error", message: "That product does not match the selected ingredient." };
+    const { data: product } = await supabase
+      .from("inventory_products")
+      .select("id")
+      .eq("id", result.data.preferredProductId)
+      .eq("ingredient_id", result.data.ingredientId)
+      .eq("organization_id", membership.organization_id)
+      .single();
+    if (!product)
+      return {
+        status: "error",
+        message: "That product does not match the selected ingredient.",
+      };
   }
   const { error } = await supabase.from("cocktail_ingredients").insert({
     organization_id: membership.organization_id,
@@ -103,22 +145,50 @@ export async function addRecipeLine(
     quantity_in_base_unit: result.data.quantityInBaseUnit,
     notes: result.data.notes,
   });
-  if (error) return { status: "error", message: error.code === "23505" ? "That ingredient is already in this recipe." : "Could not add the recipe ingredient." };
-  revalidatePath("/cocktails");
+  if (error)
+    return {
+      status: "error",
+      message:
+        error.code === "23505"
+          ? "That ingredient is already in this recipe."
+          : "Could not add the recipe ingredient.",
+    };
+  revalidateWorkspace();
   return { status: "success", message: "Recipe ingredient added." };
 }
 
-export async function deleteRecipeLine(formData: FormData) {
+export async function deleteRecipeLine(
+  _state: CocktailFormState,
+  formData: FormData,
+): Promise<CocktailFormState> {
   const id = String(formData.get("id") ?? "");
   const { supabase, membership } = await requireRecipeManager();
-  await supabase.from("cocktail_ingredients").delete().eq("id", id).eq("organization_id", membership.organization_id);
-  revalidatePath("/cocktails");
+  const { error } = await supabase
+    .from("cocktail_ingredients")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", membership.organization_id)
+    .select("id")
+    .single();
+  if (error)
+    return { status: "error", message: "Could not remove recipe ingredient." };
+  revalidateWorkspace();
+  return {
+    status: "success",
+    message: "Recipe ingredient removed. Past production is preserved.",
+  };
 }
 
 export async function archiveCocktail(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const { supabase, membership } = await requireRecipeManager();
-  await supabase.from("cocktails").update({ is_active: false }).eq("id", id).eq("organization_id", membership.organization_id);
-  revalidatePath("/cocktails");
-  revalidatePath("/dashboard");
+  const { error } = await supabase
+    .from("cocktails")
+    .update({ is_active: false })
+    .eq("id", id)
+    .eq("organization_id", membership.organization_id)
+    .select("id")
+    .single();
+  if (error) throw new Error("Could not archive cocktail.");
+  revalidateWorkspace();
 }

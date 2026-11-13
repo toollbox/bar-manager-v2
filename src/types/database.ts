@@ -62,13 +62,13 @@ isOneToOne: false
                   ]
                 },"cocktail_production_ingredients": {
                   Row: {
-                    "cocktail_ingredient_id": string,"id": string,"inventory_product_id": string,"production_id": string,"quantity_used": number
+                    "base_unit": Database["public"]['Enums']["base_unit"],"cocktail_ingredient_id": string | null,"id": string,"ingredient_name": string,"inventory_product_id": string,"product_label": string,"production_id": string,"quantity_used": number,"recipe_policy": Database["public"]['Enums']["recipe_selection_policy"],"recipe_quantity": number
                   }
                   Insert: {
-                    "cocktail_ingredient_id": string,"id"?: string,"inventory_product_id": string,"production_id": string,"quantity_used": number
+                    "base_unit": Database["public"]['Enums']["base_unit"],"cocktail_ingredient_id"?: string | null,"id"?: string,"ingredient_name": string,"inventory_product_id": string,"product_label": string,"production_id": string,"quantity_used": number,"recipe_policy": Database["public"]['Enums']["recipe_selection_policy"],"recipe_quantity": number
                   }
                   Update: {
-                    "cocktail_ingredient_id"?: string,"id"?: string,"inventory_product_id"?: string,"production_id"?: string,"quantity_used"?: number
+                    "base_unit"?: Database["public"]['Enums']["base_unit"],"cocktail_ingredient_id"?: string | null,"id"?: string,"ingredient_name"?: string,"inventory_product_id"?: string,"product_label"?: string,"production_id"?: string,"quantity_used"?: number,"recipe_policy"?: Database["public"]['Enums']["recipe_selection_policy"],"recipe_quantity"?: number
                   }
                   Relationships: [
                     {
@@ -93,13 +93,13 @@ isOneToOne: false
                   ]
                 },"cocktail_productions": {
                   Row: {
-                    "cocktail_id": string,"created_at": string,"id": string,"location_id": string,"organization_id": string,"performed_by": string,"quantity": number
+                    "cocktail_id": string,"cocktail_name": string,"created_at": string,"id": string,"location_id": string,"organization_id": string,"performed_by": string,"quantity": number,"request_id": string | null,"request_selections": Json | null
                   }
                   Insert: {
-                    "cocktail_id": string,"created_at"?: string,"id"?: string,"location_id": string,"organization_id": string,"performed_by"?: string,"quantity": number
+                    "cocktail_id": string,"cocktail_name": string,"created_at"?: string,"id"?: string,"location_id": string,"organization_id": string,"performed_by"?: string,"quantity": number,"request_id"?: string | null,"request_selections"?: Json | null
                   }
                   Update: {
-                    "cocktail_id"?: string,"created_at"?: string,"id"?: string,"location_id"?: string,"organization_id"?: string,"performed_by"?: string,"quantity"?: number
+                    "cocktail_id"?: string,"cocktail_name"?: string,"created_at"?: string,"id"?: string,"location_id"?: string,"organization_id"?: string,"performed_by"?: string,"quantity"?: number,"request_id"?: string | null,"request_selections"?: Json | null
                   }
                   Relationships: [
                     {
@@ -239,6 +239,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "products_same_organization_ingredient"
+      columns: ["organization_id","ingredient_id"]
+isOneToOne: false
+      referencedRelation: "ingredients"
+      referencedColumns: ["organization_id","id"]
     }
                   ]
                 },"location_ingredient_defaults": {
@@ -316,6 +322,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"organization_invitations": {
+                  Row: {
+                    "accepted_at": string | null,"code": string,"created_at": string,"email": string,"expires_at": string,"id": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"]
+                  }
+                  Insert: {
+                    "accepted_at"?: string | null,"code"?: string,"created_at"?: string,"email": string,"expires_at"?: string,"id"?: string,"organization_id": string,"role": Database["public"]['Enums']["app_role"]
+                  }
+                  Update: {
+                    "accepted_at"?: string | null,"code"?: string,"created_at"?: string,"email"?: string,"expires_at"?: string,"id"?: string,"organization_id"?: string,"role"?: Database["public"]['Enums']["app_role"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "organization_invitations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"organization_members": {
                   Row: {
                     "created_at": string,"organization_id": string,"role": Database["public"]['Enums']["app_role"],"user_id": string
@@ -354,11 +379,20 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "create_inventory_product":
+            "accept_invitation":
+{ Args: { "invitation_code": string }; Returns: string
+                           },
+"create_inventory_product":
 { Args: { "opening_quantity"?: number,"product_bottle_size"?: number,"product_brand": string,"product_default_cost"?: number,"product_name": string,"product_reorder_point"?: number,"product_target_stock"?: number,"product_variant"?: string,"target_ingredient_id": string,"target_location_id": string,"target_organization_id": string }; Returns: string
+                           },
+"create_location":
+{ Args: { "location_name": string,"location_timezone": string,"target_organization_id": string }; Returns: string
                            },
 "create_organization":
 { Args: { "first_location_name": string,"location_timezone"?: string,"organization_name": string }; Returns: string
+                           },
+"daily_production_totals":
+{ Args: { "at_time"?: string,"target_location_id": string }; Returns: Json
                            },
 "has_organization_role":
 { Args: { "allowed_roles": (Database["public"]['Enums']["app_role"])[],"target_organization_id": string }; Returns: boolean
@@ -367,10 +401,27 @@ isOneToOne: false
 { Args: { "target_organization_id": string }; Returns: boolean
                            },
 "make_cocktail":
-{ Args: { "product_selections": Json,"production_quantity": number,"target_cocktail_id": string,"target_location_id": string,"target_organization_id": string }; Returns: string
+{ Args: { "product_selections": Json,"production_quantity": number,"request_id"?: string,"target_cocktail_id": string,"target_location_id": string,"target_organization_id": string }; Returns: string
+                           },
+"manage_team_member":
+{ Args: { "new_role"?: Database["public"]['Enums']["app_role"],"target_organization_id": string,"target_user_id": string }; Returns: undefined
+                           },
+"production_report":
+{ Args: { "from_date": string,"page_number"?: number,"target_location_id": string,"through_date": string }; Returns: Json
                            },
 "record_stock_movement":
 { Args: { "movement_notes"?: string,"stock_movement_type": Database["public"]['Enums']["inventory_movement_type"],"stock_quantity_delta": number,"target_inventory_product_id": string,"target_location_id": string,"target_organization_id": string }; Returns: number
+                           },
+"seed_starter_bar":
+{ Args: { "target_location_id": string,"target_organization_id": string }; Returns: Json
+                           },
+"team_members":
+{ Args: { "target_organization_id": string }; Returns: {
+              "email": string,"role": Database["public"]['Enums']["app_role"],"user_id": string
+            }[]
+                           },
+"update_inventory_product":
+{ Args: { "product_bottle_size": number,"product_brand": string,"product_cost": number,"product_image_url"?: string,"product_name": string,"product_reorder_point": number,"product_target_stock": number,"target_location_id": string,"target_organization_id": string,"target_product_id": string }; Returns: undefined
                            }
           }
           Enums: {
