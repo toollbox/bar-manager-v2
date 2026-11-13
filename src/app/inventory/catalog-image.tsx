@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { updateCatalogImage } from "@/app/inventory/actions";
-import { getStorageImageUrl } from "@/lib/catalog-images";
+import {
+  getStorageImageUrl,
+  type CatalogPhotoCredit,
+} from "@/lib/catalog-images";
 import { createClient } from "@/lib/supabase/client";
 
 const allowedTypes = new Map([
@@ -25,6 +28,9 @@ export function CatalogImage({
   alt,
   compact = false,
   canUpload = true,
+  credit,
+  aspect = "landscape",
+  fit = "cover",
 }: {
   organizationId: string;
   entityType: "ingredients" | "products" | "cocktails";
@@ -35,6 +41,9 @@ export function CatalogImage({
   alt: string;
   compact?: boolean;
   canUpload?: boolean;
+  credit?: CatalogPhotoCredit;
+  aspect?: "landscape" | "portrait" | "square";
+  fit?: "cover" | "contain";
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +51,36 @@ export function CatalogImage({
   const [error, setError] = useState<string | null>(null);
   const src =
     (currentPath && getStorageImageUrl(currentPath)) || imageUrl || fallbackUrl;
+  const showCredit = !currentPath && !imageUrl && credit;
+  const creditText = showCredit ? (
+    <p className="text-[10px] leading-relaxed text-stone-500">
+      Photo:{" "}
+      <a
+        className="underline hover:text-stone-800"
+        href={credit.source}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {credit.author}
+      </a>
+      {" · "}
+      {credit.licenseUrl ? (
+        <a
+          className="underline hover:text-stone-800"
+          href={credit.licenseUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {credit.license}
+        </a>
+      ) : (
+        credit.license
+      )}
+      <span className="block">
+        Resized{fit === "cover" ? "/cropped" : ""} for display.
+      </span>
+    </p>
+  ) : null;
 
   async function upload(file?: File) {
     if (!file) return;
@@ -60,38 +99,40 @@ export function CatalogImage({
     setUploading(true);
     setError(null);
     try {
-    const supabase = createClient();
-    const path = `${organizationId}/${entityType}/${entityId}/${crypto.randomUUID()}.${extension}`;
-    const { error: uploadError } = await supabase.storage
-      .from("catalog-images")
-      .upload(path, file, {
-        cacheControl: "31536000",
-        contentType: file.type,
-        upsert: false,
-      });
+      const supabase = createClient();
+      const path = `${organizationId}/${entityType}/${entityId}/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from("catalog-images")
+        .upload(path, file, {
+          cacheControl: "31536000",
+          contentType: file.type,
+          upsert: false,
+        });
 
-    if (uploadError) {
-      setError("Upload failed. Please try another image.");
+      if (uploadError) {
+        setError("Upload failed. Please try another image.");
+        setUploading(false);
+        return;
+      }
+
+      const result = await updateCatalogImage(entityType, entityId, path);
+      if (result.error) {
+        await supabase.storage.from("catalog-images").remove([path]);
+        setError(result.error);
+        setUploading(false);
+        return;
+      }
+
+      if (currentPath) {
+        await supabase.storage.from("catalog-images").remove([currentPath]);
+      }
+
       setUploading(false);
-      return;
-    }
-
-    const result = await updateCatalogImage(entityType, entityId, path);
-    if (result.error) {
-      await supabase.storage.from("catalog-images").remove([path]);
-      setError(result.error);
-      setUploading(false);
-      return;
-    }
-
-    if (currentPath) {
-      await supabase.storage.from("catalog-images").remove([currentPath]);
-    }
-
-    setUploading(false);
-    router.refresh();
+      router.refresh();
     } catch {
-      setError("Upload could not finish. Refresh to check the picture and try again.");
+      setError(
+        "Upload could not finish. Refresh to check the picture and try again.",
+      );
     } finally {
       setUploading(false);
     }
@@ -101,12 +142,13 @@ export function CatalogImage({
     <div className={compact ? "flex items-center gap-3" : "space-y-3"}>
       <div
         aria-label={alt}
-        className={`relative overflow-hidden bg-stone-100 ${compact ? "size-12 shrink-0 rounded-xl" : "aspect-[4/3] w-full rounded-2xl"}`}
+        className={`relative overflow-hidden bg-stone-100 ${compact ? "size-16 shrink-0 rounded-xl" : `${aspect === "portrait" ? "aspect-[4/5]" : aspect === "square" ? "aspect-square" : "aspect-[4/3]"} w-full rounded-2xl`}`}
         role="img"
         style={{
-          backgroundImage: `linear-gradient(to top, rgba(28,25,23,.12), transparent 55%), url("${src.replaceAll('"', "%22")}")`,
+          backgroundImage: `${fit === "cover" ? "linear-gradient(to top, rgba(28,25,23,.12), transparent 55%), " : ""}url("${src.replaceAll('"', "%22")}")`,
           backgroundPosition: "center",
-          backgroundSize: "cover",
+          backgroundSize: currentPath || imageUrl ? "cover" : fit,
+          backgroundRepeat: "no-repeat",
         }}
       >
         {uploading ? (
@@ -115,29 +157,42 @@ export function CatalogImage({
           </span>
         ) : null}
       </div>
-      {canUpload ? (
+      {!compact ? creditText : null}
+      {canUpload || (compact && showCredit) ? (
         <div className={compact ? "min-w-0" : ""}>
-          <input
-            accept="image/jpeg,image/png,image/webp,image/avif"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              event.currentTarget.value = "";
-              void upload(file);
-            }}
-            ref={inputRef}
-            type="file"
-          />
-          <button
-            className={`${compact ? "text-xs" : "w-full rounded-xl border border-stone-200 px-3 py-2 text-sm"} inline-flex items-center justify-center gap-1.5 font-semibold text-stone-600 hover:bg-stone-50 disabled:opacity-60`}
-            disabled={uploading}
-            onClick={() => inputRef.current?.click()}
-            type="button"
-          >
-            <Camera size={compact ? 14 : 16} />{" "}
-            {currentPath ? "Replace" : "Upload image"}
-          </button>
-          {error ? <p className="mt-1 text-xs text-rose-600">{error}</p> : null}
+          {canUpload ? (
+            <>
+              <input
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  event.currentTarget.value = "";
+                  void upload(file);
+                }}
+                ref={inputRef}
+                type="file"
+              />
+              <button
+                className={`${compact ? "text-xs" : "w-full rounded-xl border border-stone-200 px-3 py-2 text-sm"} inline-flex items-center justify-center gap-1.5 font-semibold text-stone-600 hover:bg-stone-50 disabled:opacity-60`}
+                disabled={uploading}
+                onClick={() => inputRef.current?.click()}
+                type="button"
+              >
+                <Camera size={compact ? 14 : 16} />{" "}
+                {currentPath ? "Replace" : "Upload image"}
+              </button>
+              {error ? (
+                <p className="mt-1 text-xs text-rose-600">{error}</p>
+              ) : null}
+            </>
+          ) : null}
+          {compact && showCredit ? (
+            <details className="mt-1 max-w-40 text-[10px] text-stone-500">
+              <summary className="cursor-pointer">Photo credit</summary>
+              {creditText}
+            </details>
+          ) : null}
         </div>
       ) : null}
     </div>

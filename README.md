@@ -7,28 +7,98 @@ service production, purchasing, and AI-assisted recommendations.
 
 - Node.js 24 LTS (see `.nvmrc`)
 - npm 11+
+- Docker Desktop running for the local Supabase database, authentication, and storage
 
 This repository currently includes a project-local Node installation in
 `.tools/node` for development on this machine. The directory is ignored by Git.
 
-## Development
+## Start the app on this Mac
 
-If Node is installed globally or through `nvm`:
+Node.js does not need to be started as a separate service. Select the installed
+Node version in your terminal, then `npm run dev` starts the application using it.
+
+1. Open a terminal in VS Code or Terminal and enter the project directory:
 
 ```bash
-npm ci
+cd /Users/roman/Documents/code/bar-manager-v2
+```
+
+2. Load `nvm` and select Node.js 24 from the project's `.nvmrc`:
+
+```bash
+source /Users/roman/.nvm/nvm.sh
+nvm use
+node --version
+npm --version
+```
+
+Run these commands in each new terminal. If Node 24 is not installed in `nvm`,
+run `nvm install` once from the project directory, then `nvm use`.
+
+3. Open Docker Desktop:
+
+```bash
+open -a Docker
+```
+
+Wait until Docker Desktop says its engine is running before continuing.
+
+4. Start the local database services and apply any pending migrations:
+
+```bash
+npx supabase start -x studio
+npx supabase migration up --local
+```
+
+5. Start the web application:
+
+```bash
 npm run dev
 ```
 
-Using the project-local toolchain:
+Keep this terminal open. When it prints `Ready`, open
+[http://localhost:3000](http://localhost:3000). Code changes refresh automatically.
+
+### First setup or after dependency changes
+
+Run `npm ci` after selecting Node, before starting the application, when setting
+up a fresh checkout or after `package.json` / `package-lock.json` changes. It is
+not required every time you start the app. The existing `.env.local` on this
+machine is already configured; see Environment below for a fresh checkout.
+
+### If `node`, `npm`, or `nvm` is not found
+
+From the project directory, activate the existing project-local toolchain:
 
 ```bash
 export PATH="$PWD/.tools/node/bin:$PATH"
-npm ci
-npm run dev
+node --version
+npm --version
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Then continue with the Docker, Supabase, and `npm run dev` steps above. This
+fallback applies to this machine; `.tools/node` is not included in Git.
+
+### Stop and restart
+
+- Press **Ctrl+C** in the app's terminal to stop the web server.
+- Run `npm run dev` to start it again in the same terminal.
+- To stop the local database services while retaining their data, run
+  `npx supabase stop` after stopping the web server.
+- If Next.js reports that port 3000 is occupied, check whether the app is already
+  running in another terminal. Use the URL printed by the server if it chooses a
+  different port.
+
+### Run a production build locally
+
+With Supabase running and `.env.local` configured:
+
+```bash
+npm run build
+npm start
+```
+
+Stop the development server first so both servers do not compete for port 3000.
 
 ## Local Supabase
 
@@ -39,8 +109,9 @@ until Docker Desktop has permission to access the macOS Documents folder:
 npx supabase start -x studio
 ```
 
-The local API runs at `http://127.0.0.1:54321`. Local credentials are generated
-by the Supabase CLI and stored only in the ignored `.env.local` file.
+The local API runs at `http://127.0.0.1:54321`. To inspect service status and local
+credentials, run `npx supabase status`. The application reads its local API URL
+and publishable key from the ignored `.env.local` file.
 
 ## Validation
 
@@ -53,8 +124,18 @@ npm run build
 
 ## Environment
 
-Copy `.env.example` to `.env.local` when the Supabase project is connected.
-Never commit `.env.local` or service-role credentials.
+For a fresh checkout, copy `.env.example` to `.env.local` only if `.env.local`
+does not already exist. After starting Supabase, obtain the local publishable
+key with `npx supabase status`, then set these two values:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<local publishable key from Supabase status>
+```
+
+Use the **publishable** key, not the secret or service-role key. Restart
+`npm run dev` after changing `.env.local`. Never commit `.env.local` or
+service-role credentials.
 
 ## Domain model
 
@@ -67,6 +148,25 @@ Inventory categories and branded products can use an external HTTPS image or a
 custom upload. Uploads are stored in the public `catalog-images` Supabase Storage
 bucket, limited to 5 MB, and restricted to JPEG, PNG, WebP, and AVIF files.
 Write access is limited to owners and managers in the item's organization.
+
+The six starter cocktails have individual photographs bundled in
+`public/images/cocktails`, used automatically on the Cocktails and Service
+pages when a drink has no custom image. Uploaded images take priority, followed
+by an external image URL, then the matching bundled photo. Matching ignores
+case/punctuation and accepts “Gin & Tonic” and “Whisky Sour” spellings. Other
+cocktails use the general cocktail photo until an owner/manager chooses one.
+Photo authors, Wikimedia Commons sources, and individual image licenses are
+listed in `public/images/cocktails/credits.json` and shown below default photos.
+To restore missing bundled assets, run `node scripts/download-cocktail-photos.mjs`.
+
+Inventory also includes 15 local reference photographs covering the 14 starter
+ingredients and 15 starter products. Known products match by brand and product
+name; other products use their ingredient's photo, labeled as an ingredient
+reference. Custom uploads and image URLs always take priority. Bottle reference
+photos show the entire bottle; packaging and sizes may differ from your stock.
+Sources and licenses are in `public/images/inventory/credits.json`, with credits
+below ingredient images and under “Photo credit” in product rows. Restore missing
+assets with `node scripts/download-inventory-photos.mjs`.
 
 Cocktail recipes use one of three product-selection rules: any available brand,
 prefer a named product while allowing substitution, or require an exact product.

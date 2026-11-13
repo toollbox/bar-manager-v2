@@ -1,18 +1,13 @@
-import {
-  ArrowLeft,
-  CheckCircle2,
-  CircleAlert,
-  Martini,
-  PackageSearch,
-} from "lucide-react";
+import { ArrowLeft, Martini, PackageSearch } from "lucide-react";
 import Link from "next/link";
 
 import { CatalogImage } from "@/app/inventory/catalog-image";
 import { MakeDrinkForm } from "@/app/service/make-drink-form";
+import { ServiceMenu } from "@/app/service/service-menu";
 import { requireWorkspace } from "@/data/workspace";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { calculateCocktailAvailability } from "@/domain/availability";
-import { getDefaultCatalogImage } from "@/lib/catalog-images";
+import { getCocktailPhoto, getDefaultCatalogImage } from "@/lib/catalog-images";
 
 export default async function ServicePage() {
   const { supabase, membership, location } = await requireWorkspace();
@@ -29,7 +24,7 @@ export default async function ServicePage() {
     supabase
       .from("cocktails")
       .select(
-        "id, name, description, glassware, garnish, image_path, image_url",
+        "id, name, description, instructions, glassware, garnish, image_path, image_url",
       )
       .eq("organization_id", membership.organization_id)
       .eq("is_active", true)
@@ -42,7 +37,7 @@ export default async function ServicePage() {
       .eq("organization_id", membership.organization_id),
     supabase
       .from("ingredients")
-      .select("id, name, base_unit, is_active")
+      .select("id, name, category, base_unit, is_active")
       .eq("organization_id", membership.organization_id),
     supabase
       .from("inventory_products")
@@ -135,7 +130,6 @@ export default async function ServicePage() {
   const availableCount = cocktails.filter(
     (cocktail) => cocktail.availability.canMake,
   ).length;
-  const fallbackImage = getDefaultCatalogImage("cocktail");
 
   return (
     <main className="min-h-screen bg-[#f5f3ee] text-stone-950">
@@ -180,109 +174,159 @@ export default async function ServicePage() {
             </Link>
           </div>
         ) : (
-          <section className="mt-8 grid gap-5 lg:grid-cols-2">
-            {cocktails.map((cocktail) => (
-              <article
-                className={`overflow-hidden rounded-2xl border bg-white ${cocktail.availability.canMake ? "border-emerald-200" : "border-stone-200"}`}
-                key={cocktail.id}
-              >
-                <div className="grid grid-cols-[120px_1fr] border-b border-stone-100">
-                  <div className="p-3">
-                    <CatalogImage
-                      alt={`${cocktail.name} cocktail`}
-                      canUpload={false}
-                      compact={false}
-                      currentPath={cocktail.image_path}
-                      entityId={cocktail.id}
-                      entityType="cocktails"
-                      fallbackUrl={fallbackImage}
-                      imageUrl={cocktail.image_url}
-                      organizationId={membership.organization_id}
-                    />
-                  </div>
-                  <div className="flex flex-col justify-center p-4">
-                    <div className="flex items-center gap-2">
-                      {cocktail.availability.canMake ? (
-                        <CheckCircle2 className="text-emerald-600" size={18} />
-                      ) : (
-                        <CircleAlert className="text-amber-600" size={18} />
-                      )}
-                      <h2 className="font-semibold">{cocktail.name}</h2>
-                    </div>
-                    <p className="mt-1 text-sm text-stone-500">
-                      {cocktail.description ||
-                        [cocktail.glassware, cocktail.garnish]
-                          .filter(Boolean)
-                          .join(" · ") ||
-                        "Recipe-defined cocktail"}
-                    </p>
-                    <p
-                      className={`mt-3 text-xs font-semibold ${cocktail.availability.canMake ? "text-emerald-700" : "text-amber-700"}`}
-                    >
-                      {cocktail.availability.canMake
-                        ? `${cocktail.availability.maxServings} serving${cocktail.availability.maxServings === 1 ? "" : "s"} possible`
-                        : "Cannot make right now"}
-                    </p>
-                  </div>
-                </div>
-                <div className="divide-y divide-stone-100 px-5">
-                  {cocktail.availability.lines.length === 0 ? (
-                    <p className="py-5 text-sm text-amber-700">
-                      Recipe has no ingredients.
-                    </p>
-                  ) : (
-                    cocktail.availability.lines.map((line) => (
-                      <div className="py-4" key={line.lineId}>
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-semibold">
-                            {line.required.toLocaleString()} {line.unit}{" "}
-                            {line.ingredientName}
-                          </p>
-                          <span
-                            className={`text-xs font-semibold ${line.canMake ? "text-emerald-700" : "text-rose-700"}`}
-                          >
-                            {line.available.toLocaleString()} {line.unit} across
-                            eligible products
-                          </span>
-                        </div>
-                        {line.products.length ? (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {line.products.map((product, index) => (
-                              <span
-                                className={`rounded-full px-2.5 py-1 text-xs ${index === 0 && line.preferredProductId === product.id ? "bg-amber-100 text-amber-800" : "bg-stone-100 text-stone-600"}`}
-                                key={product.id}
-                              >
-                                {product.label} ·{" "}
-                                {product.quantity.toLocaleString()} {line.unit}
-                                {index === 0 &&
-                                line.preferredProductId === product.id
-                                  ? " · preferred"
-                                  : ""}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="mt-2 flex items-center gap-1.5 text-xs text-rose-600">
-                            <PackageSearch size={14} />
-                            No eligible product in stock
-                          </p>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-                {cocktail.availability.canMake ? (
-                  <MakeDrinkForm
-                    requestId={crypto.randomUUID()}
-                    cocktailId={cocktail.id}
-                    lines={cocktail.availability.lines}
-                    locationId={location.id}
-                    maxServings={cocktail.availability.maxServings}
+          <ServiceMenu
+            drinks={cocktails.map((cocktail) => {
+              const photo =
+                !cocktail.image_path && !cocktail.image_url
+                  ? getCocktailPhoto(cocktail.name)
+                  : undefined;
+              return {
+                id: cocktail.id,
+                name: cocktail.name,
+                canMake: cocktail.availability.canMake,
+                baseSpirits: cocktail.availability.lines.flatMap((line) => {
+                  const ingredient = ingredients.get(line.ingredientId);
+                  return ingredient &&
+                    /^spirits?$/i.test(ingredient.category.trim())
+                    ? [{ id: ingredient.id, name: ingredient.name }]
+                    : [];
+                }),
+                searchText: [
+                  cocktail.name,
+                  cocktail.description,
+                  ...cocktail.availability.lines.flatMap((line) => [
+                    line.ingredientName,
+                    ...line.products.map((product) => product.label),
+                  ]),
+                ]
+                  .filter(Boolean)
+                  .join(" "),
+                thumbnail: (
+                  <CatalogImage
+                    alt={`${cocktail.name} cocktail`}
+                    aspect="square"
+                    canUpload={false}
+                    compact
+                    currentPath={cocktail.image_path}
+                    entityId={cocktail.id}
+                    entityType="cocktails"
+                    fallbackUrl={getDefaultCatalogImage(
+                      "cocktail",
+                      cocktail.name,
+                    )}
+                    imageUrl={cocktail.image_url}
+                    organizationId={membership.organization_id}
                   />
-                ) : null}
-              </article>
-            ))}
-          </section>
+                ),
+                details: (
+                  <>
+                    <div className="border-t border-stone-100 px-5 py-4">
+                      <p className="text-sm text-stone-500">
+                        {cocktail.description ||
+                          [cocktail.glassware, cocktail.garnish]
+                            .filter(Boolean)
+                            .join(" · ") ||
+                          "Recipe-defined cocktail"}
+                      </p>
+                      <p className="mt-3 whitespace-pre-line text-sm text-stone-700">
+                        {cocktail.instructions}
+                      </p>
+                      <p
+                        className={`mt-3 text-xs font-semibold ${cocktail.availability.canMake ? "text-emerald-700" : "text-amber-700"}`}
+                      >
+                        {cocktail.availability.canMake
+                          ? `${cocktail.availability.maxServings} serving${cocktail.availability.maxServings === 1 ? "" : "s"} possible`
+                          : "Cannot make right now"}
+                      </p>
+                      {photo ? (
+                        <p className="mt-3 text-[10px] text-stone-500">
+                          Photo:{" "}
+                          <a
+                            className="underline"
+                            href={photo.source}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {photo.author}
+                          </a>
+                          {" · "}
+                          {photo.licenseUrl ? (
+                            <a
+                              className="underline"
+                              href={photo.licenseUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {photo.license}
+                            </a>
+                          ) : (
+                            photo.license
+                          )}
+                          {" · Resized/cropped for display."}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="divide-y divide-stone-100 px-5">
+                      {cocktail.availability.lines.length === 0 ? (
+                        <p className="py-5 text-sm text-amber-700">
+                          Recipe has no ingredients.
+                        </p>
+                      ) : (
+                        cocktail.availability.lines.map((line) => (
+                          <div className="py-4" key={line.lineId}>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-sm font-semibold">
+                                {line.required.toLocaleString()} {line.unit}{" "}
+                                {line.ingredientName}
+                              </p>
+                              <span
+                                className={`text-xs font-semibold ${line.canMake ? "text-emerald-700" : "text-rose-700"}`}
+                              >
+                                {line.available.toLocaleString()} {line.unit}{" "}
+                                across eligible products
+                              </span>
+                            </div>
+                            {line.products.length ? (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {line.products.map((product, index) => (
+                                  <span
+                                    className={`rounded-full px-2.5 py-1 text-xs ${index === 0 && line.preferredProductId === product.id ? "bg-amber-100 text-amber-800" : "bg-stone-100 text-stone-600"}`}
+                                    key={product.id}
+                                  >
+                                    {product.label} ·{" "}
+                                    {product.quantity.toLocaleString()}{" "}
+                                    {line.unit}
+                                    {index === 0 &&
+                                    line.preferredProductId === product.id
+                                      ? " · preferred"
+                                      : ""}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="mt-2 flex items-center gap-1.5 text-xs text-rose-600">
+                                <PackageSearch size={14} />
+                                No eligible product in stock
+                              </p>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    {cocktail.availability.canMake ? (
+                      <MakeDrinkForm
+                        requestId={crypto.randomUUID()}
+                        cocktailId={cocktail.id}
+                        lines={cocktail.availability.lines}
+                        locationId={location.id}
+                        maxServings={cocktail.availability.maxServings}
+                      />
+                    ) : null}
+                  </>
+                ),
+              };
+            })}
+          />
         )}
         {(historyResult.data ?? []).length > 0 ? (
           <section className="mt-8 rounded-2xl border border-stone-200 bg-white">

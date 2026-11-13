@@ -1,0 +1,188 @@
+[
+  {
+    "name": "Vodka",
+    "src": "/images/inventory/smirnoff.jpg",
+    "ingredients": ["Vodka"],
+    "products": ["Smirnoff No. 21 Vodka", "Smirnoff No. 21"],
+    "fit": "contain",
+    "author": "Alex P. Kok",
+    "source": "https://commons.wikimedia.org/wiki/File:Smirnoff_Vodka_bottle_front.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Smirnoff_Vodka_bottle_front.jpg/500px-Smirnoff_Vodka_bottle_front.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "name": "Grey Goose Original",
+    "src": "/images/inventory/grey-goose.jpg",
+    "ingredients": [],
+    "products": ["Grey Goose Original", "Grey Goose Original Vodka"],
+    "fit": "contain",
+    "author": "Indrajit Das",
+    "source": "https://commons.wikimedia.org/wiki/File:Grey_Goose_Original_Vodka_01.tif",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Grey_Goose_Original_Vodka_01.tif/lossy-page1-330px-Grey_Goose_Original_Vodka_01.tif.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "name": "Orange Liqueur",
+    "src": "/images/inventory/cointreau.jpg",
+    "ingredients": ["Orange Liqueur", "Triple Sec"],
+    "products": ["Cointreau Orange Liqueur", "Cointreau Original"],
+    "fit": "contain",
+    "author": "GaelCate",
+    "source": "https://commons.wikimedia.org/wiki/File:Cointreau_original_v4.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Cointreau_original_v4.jpg/500px-Cointreau_original_v4.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "name": "White Rum",
+    "src": "/images/inventory/bacardi.jpg",
+    "ingredients": ["White Rum", "Light Rum"],
+    "products": ["Bacardi Superior", "Bacardi Carta Blanca"],
+    "fit": "contain",
+    "author": "Miika Silfverberg",
+    "source": "https://commons.wikimedia.org/wiki/File:Bacardi_(on_white).jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Bacardi_%28on_white%29.jpg/330px-Bacardi_%28on_white%29.jpg",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/"
+  },
+  {
+    "name": "Gin",
+    "src": "/images/inventory/bombay-sapphire.jpg",
+    "ingredients": ["Gin"],
+    "products": ["Bombay Sapphire London Dry Gin", "Bombay Sapphire Original"],
+    "fit": "contain",
+    "author": "East View Photography",
+    "source": "https://commons.wikimedia.org/wiki/File:Bombay_sapphire_bottle.jpg",
+    "download": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Bombay_sapphire_bottle.jpg",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/"
+  },
+  {
+    "name": "Bourbon",
+    "src": "/images/inventory/makers-mark.jpg",
+    "ingredients": ["Bourbon", "Bourbon Whiskey"],
+    "products": [
+      "Maker's Mark Kentucky Straight Bourbon",
+      "Maker's Mark Bourbon"
+    ],
+    "fit": "contain",
+    "author": "Brian Adler",
+    "source": "https://commons.wikimedia.org/wiki/File:Bottle_of_Maker's_Mark_Whisky.JPG",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Bottle_of_Maker%27s_Mark_Whisky.JPG/500px-Bottle_of_Maker%27s_Mark_Whisky.JPG",
+    "license": "Public domain",
+    "licenseUrl": null
+  },
+  {
+    "name": "Tonic Water",
+    "src": "/images/inventory/fever-tree-tonic.jpg",
+    "ingredients": ["Tonic Water", "Tonic"],
+    "products": [
+      "Fever-Tree Premium Indian Tonic",
+      "Fever-Tree Premium Indian Tonic Water"
+    ],
+    "fit": "contain",
+    "author": "WestportWiki",
+    "source": "https://commons.wikimedia.org/wiki/File:Fever_Tree_Tonic_-_August_2014.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Fever_Tree_Tonic_-_August_2014.jpg/960px-Fever_Tree_Tonic_-_August_2014.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+  },
+  {
+    "name": "Aromatic Bitters",
+    "src": "/images/inventory/angostura.jpg",
+    "ingredients": ["Aromatic Bitters", "Bitters"],
+    "products": ["Angostura Aromatic Bitters"],
+    "fit": "contain",
+    "author": "Didier Descouens",
+    "source": "https://commons.wikimedia.org/wiki/File:Angostura_aromatic_bitters_dD.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Angostura_aromatic_bitters_dD.jpg/500px-Angostura_aromatic_bitters_dD.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+  },
+  {
+    "name": "Lime Juice",
+    "src": "/images/inventory/lime-juice.jpg",
+    "ingredients": ["Lime Juice", "Fresh Lime Juice"],
+    "products": ["House Fresh Lime Juice"],
+    "fit": "cover",
+    "author": "mnchilemom",
+    "source": "https://commons.wikimedia.org/wiki/File:Lime_juice_1.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Lime_juice_1.jpg/960px-Lime_juice_1.jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/"
+  },
+  {
+    "name": "Lemon Juice",
+    "src": "/images/inventory/lemon-juice.jpg",
+    "ingredients": ["Lemon Juice", "Fresh Lemon Juice"],
+    "products": ["House Fresh Lemon Juice"],
+    "fit": "cover",
+    "author": "David Goehring",
+    "source": "https://commons.wikimedia.org/wiki/File:Lemon_juice.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Lemon_juice.jpg/960px-Lemon_juice.jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/"
+  },
+  {
+    "name": "Mint",
+    "src": "/images/inventory/mint.jpg",
+    "ingredients": ["Mint", "Fresh Mint", "Mint Leaves"],
+    "products": ["House Fresh Mint Leaves"],
+    "fit": "cover",
+    "author": "Commonists",
+    "source": "https://commons.wikimedia.org/wiki/File:Mint_leaves_(Mentha_spicata).jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Mint_leaves_%28Mentha_spicata%29.jpg/960px-Mint_leaves_%28Mentha_spicata%29.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "name": "Simple Syrup",
+    "src": "/images/inventory/simple-syrup.jpg",
+    "ingredients": ["Simple Syrup", "Sugar Syrup"],
+    "products": ["House Simple Syrup"],
+    "fit": "cover",
+    "author": "DashNistha",
+    "source": "https://commons.wikimedia.org/wiki/File:Sugar_Syrup.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Sugar_Syrup.jpg/500px-Sugar_Syrup.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "name": "Soda Water",
+    "src": "/images/inventory/soda-water.jpg",
+    "ingredients": ["Soda Water", "Club Soda", "Sparkling Water"],
+    "products": ["House Soda Water"],
+    "fit": "cover",
+    "author": "W.carter",
+    "source": "https://commons.wikimedia.org/wiki/File:Blue_glass_with_carbonated_water.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Blue_glass_with_carbonated_water.jpg/960px-Blue_glass_with_carbonated_water.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "name": "Ginger Beer",
+    "src": "/images/inventory/ginger-beer.jpg",
+    "ingredients": ["Ginger Beer"],
+    "products": [],
+    "fit": "contain",
+    "author": "Aatu Dorochenko",
+    "source": "https://commons.wikimedia.org/wiki/File:Ginger_beer_bottle_assortment.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Ginger_beer_bottle_assortment.jpg/960px-Ginger_beer_bottle_assortment.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "name": "Tequila",
+    "src": "/images/inventory/jose-cuervo-silver.jpg",
+    "ingredients": ["Tequila", "Silver Tequila", "Blanco Tequila"],
+    "products": ["Jose Cuervo Especial Silver", "José Cuervo Especial Silver"],
+    "fit": "contain",
+    "author": "Photos Public Domain",
+    "source": "https://www.photos-public-domain.com/2010/12/03/jose-cuervo-silver-tequila/",
+    "download": "https://www.photos-public-domain.com/wp-content/uploads/2010/12/jose_cuervo_silver_tequila.jpg",
+    "license": "Public domain",
+    "licenseUrl": null
+  }
+]

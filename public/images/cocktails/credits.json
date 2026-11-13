@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Margarita",
+    "src": "/images/cocktails/margarita.jpg",
+    "author": "Jon Sullivan",
+    "source": "https://commons.wikimedia.org/wiki/File:Margarita_Drink.jpg",
+    "download": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Margarita_Drink.jpg",
+    "license": "Public domain",
+    "licenseUrl": null
+  },
+  {
+    "name": "Moscow Mule",
+    "src": "/images/cocktails/moscow-mule.jpg",
+    "author": "Gordito1869",
+    "source": "https://commons.wikimedia.org/wiki/File:Moscow_mule_Cocktail_im_Kupferbecher.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Moscow_mule_Cocktail_im_Kupferbecher.jpg/960px-Moscow_mule_Cocktail_im_Kupferbecher.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "name": "Old Fashioned",
+    "src": "/images/cocktails/old-fashioned.jpg",
+    "author": "Ralf Roletschek",
+    "source": "https://commons.wikimedia.org/wiki/File:15-09-26-RalfR-WLC-0140.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/15-09-26-RalfR-WLC-0140.jpg/960px-15-09-26-RalfR-WLC-0140.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+  },
+  {
+    "name": "Mojito",
+    "src": "/images/cocktails/mojito.jpg",
+    "author": "soyculto",
+    "source": "https://commons.wikimedia.org/wiki/File:Standard_version_of_Mojito_Cocktail.jpg",
+    "download": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Standard_version_of_Mojito_Cocktail.jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/"
+  },
+  {
+    "name": "Gin and Tonic",
+    "src": "/images/cocktails/gin-and-tonic.jpg",
+    "author": "NotFromUtrecht",
+    "source": "https://commons.wikimedia.org/wiki/File:Gin_and_Tonic_with_ingredients.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Gin_and_Tonic_with_ingredients.jpg/960px-Gin_and_Tonic_with_ingredients.jpg",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+  },
+  {
+    "name": "Whiskey Sour",
+    "src": "/images/cocktails/whiskey-sour.jpg",
+    "author": "Gingalain",
+    "source": "https://commons.wikimedia.org/wiki/File:Whiskey_sour.jpg",
+    "download": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/Whiskey_sour.jpg/960px-Whiskey_sour.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  }
+]

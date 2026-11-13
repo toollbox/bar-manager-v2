@@ -29,16 +29,14 @@ test("owner can load stock, edit targets, pour, preserve history, and switch loc
     await expect(
       smirnoff.getByText("Product and location stock targets saved."),
     ).toBeVisible();
-    await smirnoff
-      .locator('input[type="file"]')
-      .setInputFiles({
-        name: "test-stock.png",
-        mimeType: "image/png",
-        buffer: Buffer.from(
-          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=",
-          "base64",
-        ),
-      });
+    await smirnoff.locator('input[type="file"]').setInputFiles({
+      name: "test-stock.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    });
     await expect(
       smirnoff.getByRole("button", { name: "Replace", exact: true }),
     ).toBeVisible();
@@ -48,17 +46,16 @@ test("owner can load stock, edit targets, pour, preserve history, and switch loc
       .eq("organization_id", f.org)
       .eq("brand", "Smirnoff")
       .single();
-    await smirnoff
-      .locator('input[type="file"]')
-      .setInputFiles({
-        name: "replacement-stock.png",
-        mimeType: "image/png",
-        buffer: Buffer.from(
-          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=",
-          "base64",
-        ),
-      });
-    if (!uploaded?.image_path) throw new Error("Uploaded product image was not saved.");
+    await smirnoff.locator('input[type="file"]').setInputFiles({
+      name: "replacement-stock.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    });
+    if (!uploaded?.image_path)
+      throw new Error("Uploaded product image was not saved.");
     const oldName = uploaded.image_path.split("/").at(-1);
     await expect
       .poll(async () => {
@@ -71,41 +68,75 @@ test("owner can load stock, edit targets, pour, preserve history, and switch loc
       .toBe(false);
 
     await page.goto("/service");
-    const mule = page
-      .locator("article")
-      .filter({
-        has: page.getByRole("heading", { name: "Moscow Mule", exact: true }),
-      });
+    const mule = page.locator("article").filter({
+      has: page.getByRole("heading", { name: "Moscow Mule", exact: true }),
+    });
+    await mule.locator("summary").click();
+    const vodka = mule.getByRole("combobox", { name: /^Vodka/ });
+    const make = mule.getByRole("button", {
+      name: "Make 1 drink",
+      exact: true,
+    });
+    await expect(vodka).toHaveValue("");
+    await expect(
+      mule.getByRole("combobox", { name: /^Lime Juice/ }),
+    ).not.toHaveValue("");
+    await expect(
+      mule.getByRole("combobox", { name: /^Ginger Beer/ }),
+    ).not.toHaveValue("");
+    await expect(make).toBeDisabled();
+    const smirnoffId = await vodka
+      .getByRole("option", { name: /Smirnoff/ })
+      .getAttribute("value");
+    if (!smirnoffId) throw new Error("Smirnoff product option was not found.");
+    await vodka.selectOption(smirnoffId);
+    await expect(make).toBeEnabled();
     await mule
       .getByRole("button", { name: "Make 1 drink", exact: true })
       .click();
     await expect(mule.getByText(/1 drink made/)).toBeVisible();
+    await expect(vodka).toHaveValue("");
+    await expect(make).toBeDisabled();
+    await expect(
+      mule.getByRole("combobox", { name: /^Lime Juice/ }),
+    ).not.toHaveValue("");
+    await expect(
+      mule.getByRole("combobox", { name: /^Ginger Beer/ }),
+    ).not.toHaveValue("");
     await page.goto("/reports");
     await expect(page.getByText("1 × Moscow Mule")).toBeVisible();
     await page.getByText("1 × Moscow Mule").click();
     await expect(page.getByText(/Vodka: Smirnoff No. 21 Vodka/)).toBeVisible();
 
     await page.goto("/purchasing");
-    const purchase = page.locator("article").filter({ hasText: "Smirnoff No. 21 Vodka" });
+    const purchase = page
+      .locator("article")
+      .filter({ hasText: "Smirnoff No. 21 Vodka" });
     await purchase.getByLabel("Quantity received").fill("750");
-    await purchase.getByRole("button", { name: "Receive", exact: true }).click();
+    await purchase
+      .getByRole("button", { name: "Receive", exact: true })
+      .click();
     await expect(purchase).toHaveCount(0);
     await page.goto("/inventory");
     await expect(smirnoff.getByText("3,700 ml", { exact: true })).toBeVisible();
     await smirnoff.getByText("Edit product & stock targets").click();
     page.once("dialog", (dialog) => dialog.accept());
-    await smirnoff.getByRole("button", { name: "Archive", exact: true }).click();
+    await smirnoff
+      .getByRole("button", { name: "Archive", exact: true })
+      .click();
     await expect(smirnoff).toHaveCount(0);
-    const archived = page.locator("section").filter({ has: page.getByRole("heading", { name: "Archived catalog" }) });
-    await archived.getByRole("button", { name: "Restore", exact: true }).click();
+    const archived = page
+      .locator("section")
+      .filter({ has: page.getByRole("heading", { name: "Archived catalog" }) });
+    await archived
+      .getByRole("button", { name: "Restore", exact: true })
+      .click();
     await expect(smirnoff).toHaveCount(1);
 
     await page.goto("/cocktails");
-    const recipe = page
-      .locator("article")
-      .filter({
-        has: page.getByRole("heading", { name: "Moscow Mule", exact: true }),
-      });
+    const recipe = page.locator("article").filter({
+      has: page.getByRole("heading", { name: "Moscow Mule", exact: true }),
+    });
     await recipe
       .getByRole("listitem")
       .filter({ hasText: "Vodka" })
@@ -135,6 +166,114 @@ test("owner can load stock, edit targets, pour, preserve history, and switch loc
       .selectOption(f.location);
     await page.getByRole("button", { name: "Switch", exact: true }).click();
     await expect(page.getByText("6 of 6 available")).toBeVisible();
+  } finally {
+    await f.cleanup();
+  }
+});
+
+test("service cards expand, search and filter, and recalculate choices with quantity", async ({
+  page,
+}) => {
+  const f = await fixture();
+  try {
+    const loaded = await f.owner.api.rpc("seed_starter_bar", {
+      target_organization_id: f.org,
+      target_location_id: f.location,
+    });
+    expect(loaded.error).toBeNull();
+    const { data: greyGoose, error } = await f.owner.api
+      .from("inventory_products")
+      .select("id")
+      .eq("organization_id", f.org)
+      .eq("brand", "Grey Goose")
+      .single();
+    expect(error).toBeNull();
+    if (!greyGoose) throw new Error("Grey Goose product was not found.");
+    const adjusted = await f.owner.api.rpc("record_stock_movement", {
+      target_organization_id: f.org,
+      target_location_id: f.location,
+      target_inventory_product_id: greyGoose.id,
+      stock_movement_type: "correction",
+      stock_quantity_delta: -1450,
+    });
+    expect(adjusted.error).toBeNull();
+
+    await page.goto("/login");
+    await page.getByLabel("Email address", { exact: true }).fill(f.owner.email);
+    await page.getByLabel("Password", { exact: true }).fill(f.owner.password);
+    await page
+      .locator("form")
+      .getByRole("button", { name: "Sign in to Bar Manager", exact: true })
+      .click();
+    await expect(page).toHaveURL(/dashboard/);
+    await page.goto("/service");
+    const menu = page.getByRole("region", {
+      name: "Service menu",
+      exact: true,
+    });
+    const search = menu.getByRole("searchbox", {
+      name: "Search drinks",
+      exact: true,
+    });
+    const spirit = menu.getByRole("combobox", {
+      name: "Base spirit",
+      exact: true,
+    });
+    await expect(menu.locator("details[open]")).toHaveCount(0);
+    await expect(menu.locator("article:visible")).toHaveCount(6);
+    await search.fill("  sMiRnOfF  ");
+    await expect(menu.locator("article:visible")).toHaveCount(1);
+    await expect(
+      menu.getByRole("heading", { name: "Moscow Mule", exact: true }),
+    ).toBeVisible();
+    await spirit.selectOption({ label: "Gin" });
+    await expect(
+      menu.getByText("No matching drinks", { exact: true }),
+    ).toBeVisible();
+    await expect(menu.locator("article:visible")).toHaveCount(0);
+    await menu
+      .getByRole("button", { name: "Clear filters", exact: true })
+      .click();
+    await expect(menu.locator("article:visible")).toHaveCount(6);
+    await spirit.selectOption({ label: "Gin" });
+    await expect(menu.locator("article:visible")).toHaveCount(1);
+    await expect(
+      menu.getByRole("heading", { name: "Gin and Tonic", exact: true }),
+    ).toBeVisible();
+    await menu
+      .getByRole("button", { name: "Clear filters", exact: true })
+      .click();
+    await search.fill("lime juice");
+    await expect(menu.locator("article:visible")).toHaveCount(3);
+    await menu
+      .getByRole("button", { name: "Clear filters", exact: true })
+      .click();
+    const mule = page.locator("article").filter({
+      has: page.getByRole("heading", { name: "Moscow Mule", exact: true }),
+    });
+    const vodka = mule.getByRole("combobox", { name: /^Vodka/ });
+    const quantity = mule.getByRole("spinbutton", {
+      name: "Quantity",
+      exact: true,
+    });
+    const make = mule.getByRole("button", { name: /^Make \d+ drinks?$/ });
+    await expect(mule.locator('input[name="quantity"]')).toBeHidden();
+    await mule.locator("summary").focus();
+    await mule.locator("summary").press("Enter");
+    await expect(quantity).toBeVisible();
+    await expect(vodka).toHaveValue("");
+    await expect(make).toBeDisabled();
+    await quantity.fill("2");
+    await expect(vodka).not.toHaveValue("");
+    await expect(vodka.locator("option:checked")).toHaveText(/Smirnoff/);
+    await expect(make).toBeEnabled();
+    await mule.locator("summary").click();
+    await expect(mule.locator('input[name="quantity"]')).toBeHidden();
+    await mule.locator("summary").click();
+    await expect(quantity).toHaveValue("2");
+    await quantity.fill("1");
+    await expect(vodka).toHaveValue("");
+    await expect(make).toBeDisabled();
   } finally {
     await f.cleanup();
   }
@@ -189,11 +328,10 @@ test("invited bartender can join and pour but cannot manage stock or team", asyn
       0,
     );
     await page.goto("/service");
-    const drink = page
-      .locator("article")
-      .filter({
-        has: page.getByRole("heading", { name: "Gin and Tonic", exact: true }),
-      });
+    const drink = page.locator("article").filter({
+      has: page.getByRole("heading", { name: "Gin and Tonic", exact: true }),
+    });
+    await drink.locator("summary").click();
     await drink
       .getByRole("button", { name: "Make 1 drink", exact: true })
       .click();

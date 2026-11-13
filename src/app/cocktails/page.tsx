@@ -11,7 +11,7 @@ import { CatalogImage } from "@/app/inventory/catalog-image";
 import { requireWorkspace } from "@/data/workspace";
 import { WorkspaceNav } from "@/components/workspace-nav";
 import { RemoveLineForm } from "./remove-line-form";
-import { getDefaultCatalogImage } from "@/lib/catalog-images";
+import { getCocktailPhoto, getDefaultCatalogImage } from "@/lib/catalog-images";
 
 export default async function CocktailsPage() {
   const { supabase, membership } = await requireWorkspace();
@@ -60,7 +60,6 @@ export default async function CocktailsPage() {
   const productMap = new Map(allProducts.map((item) => [item.id, item]));
   const canManage =
     membership.role === "owner" || membership.role === "manager";
-  const fallbackImage = getDefaultCatalogImage("cocktail");
   const ruleLabels = {
     any_product: "Any available brand",
     prefer_product: "Prefer",
@@ -141,11 +140,16 @@ export default async function CocktailsPage() {
                     <div className="border-b border-stone-100 p-4 lg:border-b-0 lg:border-r">
                       <CatalogImage
                         alt={`${cocktail.name} cocktail`}
+                        aspect="portrait"
                         canUpload={canManage}
                         currentPath={cocktail.image_path}
                         entityId={cocktail.id}
                         entityType="cocktails"
-                        fallbackUrl={fallbackImage}
+                        fallbackUrl={getDefaultCatalogImage(
+                          "cocktail",
+                          cocktail.name,
+                        )}
+                        credit={getCocktailPhoto(cocktail.name)}
                         imageUrl={cocktail.image_url}
                         organizationId={membership.organization_id}
                       />

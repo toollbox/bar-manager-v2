@@ -21,7 +21,10 @@ import {
 } from "@/app/inventory/inventory-forms";
 import { requireWorkspace } from "@/data/workspace";
 import { WorkspaceNav } from "@/components/workspace-nav";
-import { getDefaultCatalogImage } from "@/lib/catalog-images";
+import {
+  getDefaultCatalogImage,
+  getInventoryPhoto,
+} from "@/lib/catalog-images";
 
 export default async function InventoryPage() {
   const { supabase, membership, location, canManage } =
@@ -203,16 +206,17 @@ export default async function InventoryPage() {
               <div>
                 <h2 className="font-semibold">Ingredient images</h2>
                 <p className="mt-1 text-sm text-stone-500">
-                  Uploaded images replace the curated web default.
+                  Matching ingredient and bottle photos are included. Upload
+                  your own to personalize an item.
                 </p>
               </div>
               <a
                 className="text-xs font-medium text-stone-400 hover:text-stone-700"
-                href="https://unsplash.com"
+                href="/images/inventory/credits.json"
                 rel="noreferrer"
                 target="_blank"
               >
-                Default photography via Unsplash
+                Photo sources & licenses
               </a>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -227,7 +231,12 @@ export default async function InventoryPage() {
                     currentPath={ingredient.image_path}
                     entityId={ingredient.id}
                     entityType="ingredients"
-                    fallbackUrl={fallbackImage}
+                    fallbackUrl={getDefaultCatalogImage(
+                      "inventory",
+                      ingredient.name,
+                    )}
+                    credit={getInventoryPhoto({ name: ingredient.name })}
+                    fit={getInventoryPhoto({ name: ingredient.name })?.fit}
                     imageUrl={ingredient.image_url}
                     organizationId={membership.organization_id}
                   />
@@ -306,59 +315,75 @@ export default async function InventoryPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
-                  {rows.map((row) => (
-                    <tr key={row.id}>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <CatalogImage
-                            alt={`${row.brand} ${row.name}`}
-                            canUpload={canManage}
-                            compact
-                            currentPath={row.image_path}
-                            entityId={row.id}
-                            entityType="products"
-                            fallbackUrl={fallbackImage}
-                            imageUrl={row.image_url}
-                            organizationId={membership.organization_id}
-                          />
-                          <div>
-                            <p className="font-semibold">
-                              {row.brand} {row.name}
-                            </p>
-                            <p className="mt-0.5 text-xs text-stone-400">
-                              {row.bottle_size
-                                ? `${row.bottle_size} ${row.ingredient?.base_unit}`
-                                : "Size not set"}
-                            </p>
-                            {canManage ? (
-                              <ProductEditForm
-                                locationId={location.id}
-                                product={row}
-                              />
-                            ) : null}
+                  {rows.map((row) => {
+                    const photo = getInventoryPhoto({
+                      name: row.name,
+                      brand: row.brand,
+                      ingredientName: row.ingredient?.name,
+                    });
+                    return (
+                      <tr key={row.id}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <CatalogImage
+                              alt={`${row.brand} ${row.name}`}
+                              canUpload={canManage}
+                              compact
+                              currentPath={row.image_path}
+                              entityId={row.id}
+                              entityType="products"
+                              fallbackUrl={photo?.src ?? fallbackImage}
+                              credit={photo}
+                              fit={photo?.fit}
+                              imageUrl={row.image_url}
+                              organizationId={membership.organization_id}
+                            />
+                            <div>
+                              <p className="font-semibold">
+                                {row.brand} {row.name}
+                              </p>
+                              <p className="mt-0.5 text-xs text-stone-400">
+                                {row.bottle_size
+                                  ? `${row.bottle_size} ${row.ingredient?.base_unit}`
+                                  : "Size not set"}
+                              </p>
+                              {!row.image_path &&
+                              !row.image_url &&
+                              photo?.isIngredientReference ? (
+                                <p className="mt-1 text-xs text-stone-400">
+                                  Ingredient reference photo
+                                </p>
+                              ) : null}
+                              {canManage ? (
+                                <ProductEditForm
+                                  locationId={location.id}
+                                  product={row}
+                                />
+                              ) : null}
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-stone-600">
-                        {row.ingredient?.name ?? "Unknown"}
-                      </td>
-                      <td className="px-4 py-4 font-semibold">
-                        {row.quantity.toLocaleString()}{" "}
-                        {row.ingredient?.base_unit}
-                      </td>
-                      <td className="px-4 py-4 text-stone-500">
-                        {row.reorderPoint.toLocaleString()}{" "}
-                        {row.ingredient?.base_unit}
-                      </td>
-                      <td className="px-4 py-4">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${row.lowStock ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-700"}`}
-                        >
-                          {row.lowStock ? "Low stock" : "In stock"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-4 py-4 text-stone-600">
+                          {row.ingredient?.name ?? "Unknown"}
+                        </td>
+                        <td className="px-4 py-4 font-semibold">
+                          {row.quantity.toLocaleString()}{" "}
+                          {row.ingredient?.base_unit}
+                        </td>
+                        <td className="px-4 py-4 text-stone-500">
+                          {row.reorderPoint.toLocaleString()}{" "}
+                          {row.ingredient?.base_unit}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${row.lowStock ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-700"}`}
+                          >
+                            {row.lowStock ? "Low stock" : "In stock"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
